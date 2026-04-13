@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>电池充电系统 CEC/DOE 合规计算器 | 联邦限值基于两样品Eb平均值 + UEC公式清晰展示</title>
+    <title>电池充电系统 CEC/DOE 计算器</title>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <style>
         * { box-sizing: border-box; font-family: system-ui, 'Segoe UI', 'Arial', sans-serif; }
@@ -32,13 +32,23 @@
         .auto-class { background: #e9ecef; padding: 5px 12px; border-radius: 30px; display: inline-block; font-weight: bold; }
         .formula-box { background: #eef2fa; border-radius: 14px; padding: 10px 15px; margin: 12px 0; font-family: monospace; font-size: 0.85rem; border-left: 4px solid #2c7da0; }
         @media (max-width: 700px) { .form-field label { width: 100%; } .card { padding: 20px; } }
+        /* 用于临时克隆截图的容器样式 */
+        .screenshot-clone {
+            position: absolute;
+            top: -9999px;
+            left: -9999px;
+            width: 1100px;
+            background: #eef2f5;
+            padding: 20px;
+            z-index: -1;
+        }
     </style>
 </head>
 <body>
 
-<h1>⚡ 电池充电系统 CEC / DOE 合规计算器<br></h1>
+<h1>⚡ 电池充电系统 CEC / DOE 合规计算器</h1>
 
-<div class="card">
+<div class="card" id="baseParamsCard">
     <div class="section-title">📋 基础参数</div>
     <div class="form-grid">
         <div class="form-field"><label>🔌 充电端口数量 N :</label><input type="number" id="portCount" value="1" step="1" min="1"></div>
@@ -51,7 +61,7 @@
     <div class="info-text" id="autoClassDisplay">🤖 自动识别产品类别: <span id="classNameSpan" class="auto-class">--</span> &nbsp; (依据Er和Umax，符合DOE表3.3.3)</div>
 </div>
 
-<div class="card">
+<div class="card" id="sampleDataCard">
     <div class="section-title">🧪 样品测试数据 (两组样品)</div>
     <div style="display: flex; flex-wrap: wrap; gap: 25px;">
         <div style="flex:1; min-width: 260px;">
@@ -80,7 +90,7 @@
 </div>
 
 <div id="resultContainer" style="display: none;">
-    <div class="card result-card">
+    <div class="card result-card" id="resultCard">
         <div class="section-title">✅ 合规判定报告</div>
         <div id="resultSummary"></div>
         <div id="cecDetails" style="margin-top: 15px;"></div>
@@ -170,7 +180,6 @@
         const useFormula1 = (conditionVal <= tam);
         const energyTerm = E24 - 5 * Pm - Eb;
         if (useFormula1) {
-            // 公式Ⅰ: UEC = 365 * [ n*(E24-5Pm-Eb)*24/tcd + Pm*(tam - (tcd-5)*n) + Psb*tsb + Poff*toff ] / 1000
             const term1 = n * energyTerm * 24 / tcd;
             const term2 = Pm * (tam - (tcd - 5) * n);
             const term3 = Psb * tsb;
@@ -181,7 +190,6 @@
             return { uec, formula: "Ⅰ", condition: true, formulaExpression: formulaStr };
         } else {
             if (tcd - 5 <= 0) throw new Error("tcd 必须 >5 小时");
-            // 公式Ⅱ: UEC = 365 * [ n*(E24-5Pm-Eb)*24/(tcd-5) + Psb*tsb + Poff*toff ] /1000
             const term1 = n * energyTerm * 24 / (tcd - 5);
             const term3 = Psb * tsb;
             const term4 = Poff * toff;
@@ -194,7 +202,6 @@
 
     // ========== 主计算 ==========
     async function calculate() {
-        // 获取基础输入
         const N = parseFloat(document.getElementById('portCount').value);
         const Er = parseFloat(document.getElementById('ratedEnergy').value);
         const Umax = parseFloat(document.getElementById('maxVoltage').value);
@@ -207,7 +214,6 @@
             return;
         }
 
-        // 自动类别
         const productClass = determineProductClass(Er, Umax, isInductive);
         if (!productClass) { alert("无法判定产品类别，请检查额定能量和电压"); return; }
         const doeParams = getDOEParams(productClass, Er);
@@ -215,7 +221,6 @@
         const className = {1:"低能耗(感应)",2:"低能耗低电压",3:"低能耗中电压",4:"低能耗高电压",5:"中能耗低电压",6:"中能耗高电压",7:"高能耗"}[productClass];
         document.getElementById('classNameSpan').innerHTML = `类别 ${productClass} - ${className} (n=${n}, ta&m=${tam}h)`;
 
-        // 样品数据
         const s1 = {
             E24: parseFloat(document.getElementById('e24_1').value),
             Eb: parseFloat(document.getElementById('eb_1').value),
@@ -233,12 +238,10 @@
             return;
         }
 
-        // 1. CEC 判定
         const cec1 = evaluateCECSample(s1.Eb, s1.E24, s1.Pm, s1.Psb, N);
         const cec2 = evaluateCECSample(s2.Eb, s2.E24, s2.Pm, s2.Psb, N);
         const cecOverallOK = cec1.isOk && cec2.isOk;
 
-        // 2. UEC 计算
         let uec1, uec2, formulaUsed, formulaExpression;
         try {
             const r1 = computeUEC(s1.E24, s1.Eb, s1.Pm, s1.Psb, Poff, n, tam, tsb, toff, tcd);
@@ -253,15 +256,11 @@
         const tFactor = 12.706;
         const ucl = meanUec + tFactor * (stdDev / Math.sqrt(2));
 
-        // 3. DOE 联邦限值：基于两个样品 Eb 的平均值
         const avgEb = (s1.Eb + s2.Eb) / 2;
         const federalLimit = getDOELimitByEb(productClass, avgEb);
-        
-        // 声明值 = max(样品最大UEC, UCL/1.05)
         const maxSampleUEC = Math.max(uec1, uec2);
         const declaredValue = Math.max(maxSampleUEC, ucl / 1.05);
         const doePass = declaredValue <= federalLimit;
-        
         const finalCompliance = cecOverallOK && doePass;
 
         // 构建结果HTML
@@ -270,7 +269,6 @@
         cecHtml += `<div>样品2: ${cec2.isOk ? '✅ OK' : '❌ NG'}  (E24:${cec2.e24Value.toFixed(2)} ≤ ${cec2.e24Limit.toFixed(2)} Wh, 功率和:${cec2.powerSumValue.toFixed(3)} ≤ ${cec2.powerSumLimit.toFixed(3)} W)</div>`;
         cecHtml += `<hr><span>CEC 综合: ${cecOverallOK ? '<span class="verdict-pass">符合</span>' : '<span class="verdict-fail">不符合</span>'}</span></div>`;
 
-        // DOE结果中增加UEC公式展示
         let doeHtml = `<div style="background:#f4f9fe; border-radius:18px; padding:12px 16px; margin-top:12px;"><h3>📘 DOE 能耗判定</h3>`;
         doeHtml += `<div class="formula-box"><strong>🔢 当前使用的UEC公式 (公式${formulaUsed})：</strong><br>${formulaExpression}</div>`;
         doeHtml += `<div>🔹 样品1 UEC = ${uec1.toFixed(5)} kWh/yr</div>`;
@@ -289,7 +287,6 @@
         document.getElementById('cecDetails').innerHTML = cecHtml;
         document.getElementById('doeDetails').innerHTML = doeHtml;
 
-        // 详细过程文本（包含完整公式表达式）
         let processText = `═══════════════════════════════════════════════════
   CEC/DOE 计算详细过程
 ═══════════════════════════════════════════════════
@@ -309,24 +306,16 @@ ${formulaExpression}
 样品2 Eb=${s2.Eb} → E24限值=${cec2.e24Limit.toFixed(2)}, 功率和限值=${cec2.powerSumLimit.toFixed(4)}
 
 【UEC 计算详情】
-样品1: 
-  能量项 = E24-5Pm-Eb = ${s1.E24} -5×${s1.Pm} -${s1.Eb} = ${(s1.E24-5*s1.Pm-s1.Eb).toFixed(4)}
-  UEC1 = ${uec1.toFixed(6)} kWh/yr
-样品2:
-  能量项 = ${(s2.E24-5*s2.Pm-s2.Eb).toFixed(4)}
-  UEC2 = ${uec2.toFixed(6)} kWh/yr
+样品1: 能量项 = ${(s1.E24-5*s1.Pm-s1.Eb).toFixed(4)} → UEC1 = ${uec1.toFixed(6)} kWh/yr
+样品2: 能量项 = ${(s2.E24-5*s2.Pm-s2.Eb).toFixed(4)} → UEC2 = ${uec2.toFixed(6)} kWh/yr
 
 【统计量计算】
-UEC均值 = (${uec1.toFixed(5)} + ${uec2.toFixed(5)})/2 = ${meanUec.toFixed(5)}
-标准差 = ${stdDev.toFixed(6)}
-UCL = 均值 + 12.706*(标准差/√2) = ${meanUec.toFixed(5)} + 12.706*(${stdDev.toFixed(6)}/1.4142) = ${ucl.toFixed(5)} kWh/yr
+UEC均值 = ${meanUec.toFixed(5)} kWh/yr, 标准差 = ${stdDev.toFixed(6)}
+UCL = ${ucl.toFixed(5)} kWh/yr
 
 【DOE 联邦限值 (基于两样品Eb平均值)】
-样品1 Eb = ${s1.Eb} Wh, 样品2 Eb = ${s2.Eb} Wh
-平均值 Eb_avg = ${avgEb.toFixed(4)} Wh
-联邦标准限值 = ${federalLimit.toFixed(5)} kWh/yr
-声明值 = max(${maxSampleUEC.toFixed(5)}, ${(ucl/1.05).toFixed(5)}) = ${declaredValue.toFixed(5)}
-判定: 声明值 ≤ 联邦限值 ? ${doePass ? '是 → PASS' : '否 → FAIL'}
+平均值 Eb_avg = ${avgEb.toFixed(4)} Wh → 联邦标准限值 = ${federalLimit.toFixed(5)} kWh/yr
+声明值 = ${declaredValue.toFixed(5)} kWh/yr → ${doePass ? 'PASS' : 'FAIL'}
 
 最终: CEC ${cecOverallOK ? 'PASS' : 'FAIL'} , DOE ${doePass ? 'PASS' : 'FAIL'} → 综合 ${finalCompliance ? '合规' : '不合规'}
 生成时间: ${new Date().toLocaleString()}`;
@@ -339,20 +328,77 @@ UCL = 均值 + 12.706*(标准差/√2) = ${meanUec.toFixed(5)} + 12.706*(${stdDe
         window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
     }
 
-    // 辅助函数
+    // ========== 截图功能：包含基础参数、样品数据、结果报告，排除所有按钮 ==========
     async function copyScreenshot() {
-        const el = document.getElementById('resultContainer');
-        if (!el || el.style.display === 'none') { alert("请先计算"); return; }
+        // 确保结果区域可见
+        if (document.getElementById('resultContainer').style.display !== 'block') {
+            alert("请先完成计算，显示结果后再截图");
+            return;
+        }
+
+        // 克隆需要截图的三个主要卡片
+        const baseCard = document.getElementById('baseParamsCard');
+        const sampleCard = document.getElementById('sampleDataCard');
+        const resultCard = document.getElementById('resultCard');
+
+        // 创建克隆容器
+        const cloneContainer = document.createElement('div');
+        cloneContainer.className = 'screenshot-clone';
+        // 设置背景色与原始页面一致
+        cloneContainer.style.backgroundColor = '#eef2f5';
+        cloneContainer.style.padding = '20px';
+        cloneContainer.style.width = '1100px'; // 固定宽度保证布局一致
+
+        // 深拷贝三个卡片
+        const baseClone = baseCard.cloneNode(true);
+        const sampleClone = sampleCard.cloneNode(true);
+        const resultClone = resultCard.cloneNode(true);
+
+        // 移除所有按钮组（.btn-group）
+        const removeBtnGroups = (element) => {
+            const btns = element.querySelectorAll('.btn-group');
+            btns.forEach(btn => btn.remove());
+        };
+        removeBtnGroups(baseClone);
+        removeBtnGroups(sampleClone);
+        removeBtnGroups(resultClone);
+
+        // 可选：移除“显示/隐藏详细过程”按钮可能存在的独立按钮（但已包含在btn-group中）
+        // 额外移除可能残留的单个按钮（如果有）
+        const allBtns = [...baseClone.querySelectorAll('.btn'), ...sampleClone.querySelectorAll('.btn'), ...resultClone.querySelectorAll('.btn')];
+        allBtns.forEach(btn => btn.remove());
+
+        // 将克隆后的卡片添加到容器
+        cloneContainer.appendChild(baseClone);
+        cloneContainer.appendChild(sampleClone);
+        cloneContainer.appendChild(resultClone);
+
+        document.body.appendChild(cloneContainer);
+
         try {
-            const canvas = await html2canvas(el, { scale: 2, backgroundColor: '#ffffff' });
-            canvas.toBlob(async blob => {
+            const canvas = await html2canvas(cloneContainer, {
+                scale: 2,
+                backgroundColor: '#eef2f5',
+                logging: false,
+                useCORS: false
+            });
+            canvas.toBlob(async (blob) => {
                 try {
                     await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-                    alert("截图已复制到剪贴板");
-                } catch(e) { alert("剪贴板错误: "+e.message); }
+                    alert("✅ 截图已复制到剪贴板（包含基础参数、样品数据、报告结论）");
+                } catch (err) {
+                    alert("剪贴板写入失败: " + err.message);
+                } finally {
+                    // 清理克隆元素
+                    document.body.removeChild(cloneContainer);
+                }
             });
-        } catch(e) { alert("截图失败: "+e.message); }
+        } catch (e) {
+            alert("截图生成失败: " + e.message);
+            document.body.removeChild(cloneContainer);
+        }
     }
+
     function saveResult() {
         if (!window.lastReportText) { alert("请先计算"); return; }
         const blob = new Blob([window.lastReportText], {type: 'text/plain'});
@@ -363,10 +409,12 @@ UCL = 均值 + 12.706*(标准差/√2) = ${meanUec.toFixed(5)} + 12.706*(${stdDe
         a.click();
         URL.revokeObjectURL(url);
     }
+
     function toggleProcess() {
         const div = document.getElementById('calcProcess');
         div.style.display = div.style.display === 'none' ? 'block' : 'none';
     }
+
     function updateAutoClassDisplay() {
         const Er = parseFloat(document.getElementById('ratedEnergy').value);
         const Umax = parseFloat(document.getElementById('maxVoltage').value);
@@ -379,6 +427,7 @@ UCL = 均值 + 12.706*(标准差/√2) = ${meanUec.toFixed(5)} + 12.706*(${stdDe
             } else document.getElementById('classNameSpan').innerHTML = `无法判定`;
         }
     }
+
     document.getElementById('ratedEnergy').addEventListener('input', updateAutoClassDisplay);
     document.getElementById('maxVoltage').addEventListener('input', updateAutoClassDisplay);
     document.getElementById('inductiveConnect').addEventListener('change', updateAutoClassDisplay);
