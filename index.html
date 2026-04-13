@@ -3,640 +3,391 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>小家电充电器合规计算器 | CEC & DOE 10 CFR Part 430</title>
-    <!-- html2canvas 库，用于截图复制 -->
+    <title>电池充电系统 CEC/DOE 合规计算器 | 联邦限值基于两样品Eb平均值 + UEC公式清晰展示</title>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <style>
-        * {
-            box-sizing: border-box;
-            font-family: system-ui, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
-        }
-        body {
-            background: #f0f4f8;
-            margin: 0;
-            padding: 24px 16px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-        .container {
-            max-width: 1400px;
-            width: 100%;
-            background: white;
-            border-radius: 32px;
-            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.15);
-            overflow: hidden;
-            transition: all 0.2s;
-        }
-        .header {
-            background: #0b2b3b;
-            color: white;
-            padding: 1.8rem 2rem;
-        }
-        .header h1 {
-            margin: 0 0 0.25rem;
-            font-weight: 600;
-            font-size: 1.8rem;
-        }
-        .header p {
-            margin: 0;
-            opacity: 0.8;
-            font-size: 0.9rem;
-        }
-        .reg-badge {
-            background: #1f5e7a;
-            display: inline-block;
-            border-radius: 40px;
-            padding: 0.2rem 1rem;
-            font-size: 0.7rem;
-            margin-top: 0.75rem;
-        }
-        .content {
-            padding: 2rem;
-        }
-        .two-columns {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 2rem;
-        }
-        .input-panel {
-            flex: 1.2;
-            min-width: 280px;
-            background: #fefefe;
-            border-radius: 24px;
-            border: 1px solid #e2edf2;
-            padding: 1.2rem 1.5rem;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.02);
-        }
-        .result-panel {
-            flex: 1;
-            min-width: 300px;
-            background: #ffffff;
-            border-radius: 24px;
-            border: 1px solid #dce5ec;
-            padding: 1.2rem 1.5rem;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
-        }
-        .form-group {
-            margin-bottom: 1.25rem;
-        }
-        label {
-            font-weight: 600;
-            display: block;
-            margin-bottom: 0.4rem;
-            color: #1e2f3a;
-            font-size: 0.85rem;
-        }
-        .label-sub {
-            font-weight: normal;
-            font-size: 0.7rem;
-            color: #4b6a7c;
-            margin-top: -0.2rem;
-            margin-bottom: 0.5rem;
-        }
-        input, select {
-            width: 100%;
-            padding: 0.7rem 1rem;
-            border: 1px solid #cbdde6;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            background: #fff;
-            transition: 0.2s;
-        }
-        input:focus {
-            outline: none;
-            border-color: #2c7da0;
-            box-shadow: 0 0 0 3px rgba(44,125,160,0.2);
-        }
-        .inline-hint {
-            font-size: 0.7rem;
-            color: #5f7f92;
-            margin-top: 0.3rem;
-        }
-        button {
-            background: #1f6e8c;
-            border: none;
-            padding: 0.7rem 1.2rem;
-            border-radius: 40px;
-            font-weight: 600;
-            color: white;
-            cursor: pointer;
-            transition: 0.2s;
-            font-size: 0.85rem;
-            margin-right: 0.5rem;
-            margin-bottom: 0.5rem;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        }
-        button.secondary {
-            background: #e6f0f5;
-            color: #1f5e7a;
-            border: 1px solid #cbdde6;
-        }
-        button.warning {
-            background: #d97706;
-        }
-        button:hover {
-            filter: brightness(0.93);
-            transform: translateY(-1px);
-        }
-        .result-card {
-            background: #f9fdfe;
-            border-radius: 20px;
-            padding: 1.2rem;
-            margin: 1rem 0;
-            border-left: 5px solid #2c7da0;
-        }
-        .compliance-pass {
-            border-left-color: #2b9348;
-            background: #f0faf2;
-        }
-        .compliance-fail {
-            border-left-color: #d00000;
-            background: #fff5f5;
-        }
-        .status-badge {
-            font-weight: bold;
-            font-size: 1.2rem;
-            display: inline-block;
-            margin-bottom: 0.8rem;
-        }
-        .detail-item {
-            font-size: 0.9rem;
-            margin: 0.5rem 0;
-            display: flex;
-            justify-content: space-between;
-            border-bottom: 1px dashed #e2edf2;
-            padding: 0.3rem 0;
-        }
-        .calc-process {
-            background: #f8fafc;
-            border-radius: 16px;
-            padding: 1rem;
-            margin-top: 1rem;
-            font-size: 0.8rem;
-            font-family: monospace;
-            white-space: pre-wrap;
-            border: 1px solid #e2edf2;
-        }
-        .btn-group {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 0.6rem;
-            margin-top: 1rem;
-        }
-        .footer {
-            background: #f1f6f9;
-            padding: 1rem 2rem;
-            font-size: 0.7rem;
-            text-align: center;
-            color: #406e84;
-            border-top: 1px solid #dce9f0;
-        }
-        @media (max-width: 780px) {
-            .content { padding: 1.2rem; }
-            .two-columns { gap: 1rem; }
-        }
-        hr {
-            margin: 0.8rem 0;
-            border-color: #e2edf2;
-        }
-        .copy-toast {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #1f2f38;
-            color: white;
-            padding: 8px 18px;
-            border-radius: 40px;
-            font-size: 0.8rem;
-            z-index: 999;
-            opacity: 0;
-            transition: opacity 0.2s;
-            pointer-events: none;
-        }
+        * { box-sizing: border-box; font-family: system-ui, 'Segoe UI', 'Arial', sans-serif; }
+        body { max-width: 1200px; margin: 20px auto; padding: 0 20px; background: #eef2f5; }
+        h1 { text-align: center; color: #1e466e; margin-bottom: 20px; font-size: 1.8rem; }
+        .card { background: white; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.08); padding: 25px 30px; margin-bottom: 25px; }
+        .section-title { font-size: 1.4rem; font-weight: 600; border-left: 5px solid #2c7da0; padding-left: 15px; margin: 0 0 20px 0; color: #1f5068; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px 25px; margin-bottom: 15px; }
+        .form-field { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+        .form-field label { width: 180px; font-weight: 500; color: #2c3e50; font-size: 0.9rem; }
+        .form-field input, .form-field select { flex: 1; min-width: 120px; padding: 8px 12px; border: 1px solid #ccd7e4; border-radius: 12px; font-size: 0.9rem; background: #fefefe; }
+        .form-field input:focus, .form-field select:focus { border-color: #2c7da0; outline: none; box-shadow: 0 0 0 2px rgba(44,125,160,0.2); }
+        .sample-group { background: #f9fbfd; padding: 15px 20px; border-radius: 18px; margin-top: 15px; }
+        .sample-title { font-weight: 700; font-size: 1.1rem; color: #1f5068; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+        .btn-group { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 25px; justify-content: center; }
+        .btn { background: #2c7da0; color: white; border: none; padding: 10px 24px; border-radius: 40px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .btn-secondary { background: #5f6c7a; }
+        .btn:hover { background: #1f5e7a; transform: translateY(-1px); }
+        .result-card { background: white; border-radius: 24px; padding: 20px 25px; }
+        .verdict-pass { color: #1e7e34; background: #e0f3e8; display: inline-block; padding: 4px 14px; border-radius: 40px; font-weight: bold; }
+        .verdict-fail { color: #c0392b; background: #fbe9e7; display: inline-block; padding: 4px 14px; border-radius: 40px; font-weight: bold; }
+        .info-text { background: #f0f4f9; padding: 12px 18px; border-radius: 16px; font-size: 0.85rem; margin: 10px 0; }
+        .process-box { background: #f8f9fc; border-left: 4px solid #2c7da0; padding: 16px 20px; font-family: 'Courier New', monospace; font-size: 0.8rem; white-space: pre-wrap; line-height: 1.5; max-height: 450px; overflow-y: auto; border-radius: 16px; margin-top: 20px; }
+        hr { margin: 15px 0; border-color: #e2e8f0; }
+        .flex-between { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+        .auto-class { background: #e9ecef; padding: 5px 12px; border-radius: 30px; display: inline-block; font-weight: bold; }
+        .formula-box { background: #eef2fa; border-radius: 14px; padding: 10px 15px; margin: 12px 0; font-family: monospace; font-size: 0.85rem; border-left: 4px solid #2c7da0; }
+        @media (max-width: 700px) { .form-field label { width: 100%; } .card { padding: 20px; } }
     </style>
 </head>
 <body>
-<div class="container" id="appContainer">
-    <div class="header">
-        <h1>⚡ 小家电充电器合规计算器</h1>
-        <p>基于 10 CFR Part 430, Appendix Y (DOE) 及 CEC 能效标准 · 电池充电器系统 (BCS)</p>
-        <div class="reg-badge">📜 参考法规：DOE 10 CFR 430.32(z) | CEC 2021 电池充电器规范</div>
-    </div>
-    <div class="content">
-        <div class="two-columns">
-            <!-- 左侧输入区 -->
-            <div class="input-panel">
-                <h3 style="margin-top:0;">🔧 测试数据输入</h3>
-                <div class="form-group">
-                    <label>产品/型号 (可选)</label>
-                    <input type="text" id="productName" placeholder="例: 无线充电器 / 适配器" value="小家电充电器样品">
-                </div>
-                <div class="form-group">
-                    <label>🔋 电池额定能量 <em>E_batt</em> (Wh) *</label>
-                    <input type="number" id="batteryEnergy" value="45.0" step="0.1" placeholder="Wh">
-                    <div class="inline-hint">电池容量（瓦时），用于计算UEC限值</div>
-                </div>
-                <div class="form-group">
-                    <label>🔌 单次完整充电循环 交流输入能耗 <em>E_cycle</em> (Wh/cycle) *</label>
-                    <input type="number" id="energyPerCycle" value="58.0" step="0.1" placeholder="Wh">
-                    <div class="inline-hint">从电网输入的总电能（一次充电过程）</div>
-                </div>
-                <div class="form-group">
-                    <label>⏲️ 维护模式功率 <em>P_m</em> (W) *</label>
-                    <input type="number" id="maintainPower" value="0.85" step="0.01" placeholder="瓦特">
-                    <div class="inline-hint">电池充满后充电器维持模式平均功率</div>
-                </div>
-                <div class="form-group">
-                    <label>💤 待机模式功率 <em>P_sb</em> (W) *</label>
-                    <input type="number" id="standbyPower" value="0.15" step="0.01" placeholder="瓦特">
-                    <div class="inline-hint">充电器未连接电池或待机状态功率</div>
-                </div>
-                <div class="form-group">
-                    <label>⏱️ 每日维护模式时长 (小时/天)</label>
-                    <input type="number" id="maintainHours" value="22.5" step="0.5" placeholder="小时">
-                    <div class="inline-hint">默认根据典型周期 (充满后剩余时间)</div>
-                </div>
-                <div class="form-group">
-                    <label>🌙 每日待机模式时长 (小时/天)</label>
-                    <input type="number" id="standbyHours" value="1.5" step="0.5" placeholder="小时">
-                    <div class="inline-hint">一天中未连接或空闲待机时间</div>
-                </div>
-                <div class="inline-hint" style="margin-top: -0.5rem;">⚠️ 总时长建议等于24h - 充电有源模式小时数 (系统自动适应)</div>
-                <div class="btn-group">
-                    <button id="calcBtn">✅ 判定合规性</button>
-                    <button id="toggleProcessBtn" class="secondary">📘 显示/隐藏计算过程</button>
-                </div>
-            </div>
 
-            <!-- 右侧结果区 (截图区域) -->
-            <div class="result-panel" id="resultCaptureArea">
-                <h3 style="margin-top:0;">📋 合规性结论</h3>
-                <div id="resultContent">
-                    <div class="result-card" style="text-align:center; color:#5f7f92;">
-                        请输入测试数据并点击「判定合规性」
-                    </div>
-                </div>
-                <div id="calculationProcess" style="display: none;" class="calc-process">
-                    <!-- 动态显示计算步骤 -->
-                </div>
-                <div class="btn-group" style="margin-top: 1rem;">
-                    <button id="copyScreenshotBtn" class="secondary">📸 复制截图到剪贴板</button>
-                    <button id="saveResultBtn" class="secondary">💾 保存测试结果 (JSON)</button>
-                    <input type="file" id="loadResultFile" accept=".json" style="display: none;">
-                    <button id="loadResultBtn" class="secondary">📂 加载测试结果</button>
-                </div>
+<h1>⚡ 电池充电系统 CEC / DOE 合规计算器<br></h1>
+
+<div class="card">
+    <div class="section-title">📋 基础参数</div>
+    <div class="form-grid">
+        <div class="form-field"><label>🔌 充电端口数量 N :</label><input type="number" id="portCount" value="1" step="1" min="1"></div>
+        <div class="form-field"><label>🔋 电池额定能量 Er (Wh) :</label><input type="number" id="ratedEnergy" value="66.24" step="0.01"></div>
+        <div class="form-field"><label>⚡ 电池满电电压 Umax (V) :</label><input type="number" id="maxVoltage" value="16.6" step="0.1"></div>
+        <div class="form-field"><label>🔌 是否感应连接？</label><select id="inductiveConnect"><option value="no" selected>否</option><option value="yes">是</option></select></div>
+        <div class="form-field"><label>⏱️ 充电测试时间 tcd (小时) :</label><input type="number" id="testDuration" value="24" step="0.1"></div>
+        <div class="form-field"><label>📴 关机功率 Poff (W) :</label><input type="number" id="poffVal" value="0" step="0.001"></div>
+    </div>
+    <div class="info-text" id="autoClassDisplay">🤖 自动识别产品类别: <span id="classNameSpan" class="auto-class">--</span> &nbsp; (依据Er和Umax，符合DOE表3.3.3)</div>
+</div>
+
+<div class="card">
+    <div class="section-title">🧪 样品测试数据 (两组样品)</div>
+    <div style="display: flex; flex-wrap: wrap; gap: 25px;">
+        <div style="flex:1; min-width: 260px;">
+            <div class="sample-group">
+                <div class="sample-title">📊 样品 #1</div>
+                <div class="form-field"><label>E24 (整机24h功耗) Wh :</label><input type="number" id="e24_1" value="110.31" step="0.01"></div>
+                <div class="form-field"><label>Eb (电池放电能量) Wh :</label><input type="number" id="eb_1" value="76.136" step="0.01"></div>
+                <div class="form-field"><label>Pm (24h后功率 P2) W :</label><input type="number" id="pm_1" value="0.334" step="0.001"></div>
+                <div class="form-field"><label>Psb (待机功率 P1) W :</label><input type="number" id="psb_1" value="0.258" step="0.001"></div>
+            </div>
+        </div>
+        <div style="flex:1; min-width: 260px;">
+            <div class="sample-group">
+                <div class="sample-title">📊 样品 #2</div>
+                <div class="form-field"><label>E24 (整机24h功耗) Wh :</label><input type="number" id="e24_2" value="111.52" step="0.01"></div>
+                <div class="form-field"><label>Eb (电池放电能量) Wh :</label><input type="number" id="eb_2" value="75.783" step="0.01"></div>
+                <div class="form-field"><label>Pm (24h后功率 P2) W :</label><input type="number" id="pm_2" value="0.341" step="0.001"></div>
+                <div class="form-field"><label>Psb (待机功率 P1) W :</label><input type="number" id="psb_2" value="0.253" step="0.001"></div>
             </div>
         </div>
     </div>
-    <div class="footer">
-        🌟 依据 DOE 10 CFR 430.32(z) 及 Appendix Y 测试方法：UEC 限值公式基于电池能量 (E_batt) 计算；维护模式限值 ≤1.0W，待机模式限值 ≤0.2W (适用于BCS类)。UEC 年耗电量 = (E_cycle × 365 + 365×(P_m×T_m + P_sb×T_sb))/1000 (kWh/yr)。
-        <br> 符合法规即为合规，红色表示不合规。计算逻辑完全参照最新联邦能效标准。
+    <div class="btn-group">
+        <button class="btn" id="calcBtn">📐 完整计算 (CEC + DOE)</button>
+        <button class="btn btn-secondary" id="toggleProcessBtn" disabled>📄 显示/隐藏 详细过程</button>
     </div>
 </div>
-<div id="toastMsg" class="copy-toast">✅ 已复制截图到剪贴板</div>
+
+<div id="resultContainer" style="display: none;">
+    <div class="card result-card">
+        <div class="section-title">✅ 合规判定报告</div>
+        <div id="resultSummary"></div>
+        <div id="cecDetails" style="margin-top: 15px;"></div>
+        <div id="doeDetails" style="margin-top: 15px;"></div>
+        <div id="calcProcess" class="process-box" style="display: none;"></div>
+        <div class="btn-group" style="margin-top: 20px;">
+            <button class="btn" id="copyScreenshotBtn">📸 复制截图到剪贴板</button>
+            <button class="btn btn-secondary" id="saveResultBtn">💾 导出测试结果 (.txt)</button>
+        </div>
+    </div>
+</div>
 
 <script>
-    // ---------- 法规限值核心函数 ----------
-    // 1. 维护模式功率限值 (DOE 2018+)
-    const MAINTENANCE_LIMIT_W = 1.0;    // ≤ 1.0 W
-    // 2. 待机模式功率限值 (0.2W 适用于一般电池充电器)
-    const STANDBY_LIMIT_W = 0.2;        // ≤ 0.2 W
-    
-    // 3. 最大允许UEC (年耗电量) 基于电池能量 E_batt (Wh) 参照 10 CFR 430.32(z) 标准公式
-    // 使用经过校准的规则: 对于 E ≤ 100 Wh : UEC_max = 0.62 + 0.0063 * E (kWh/yr)
-    // 对于 100 < E ≤ 1000 Wh : UEC_max = 1.25 + 0.00075 * (E - 100)
-    // 对于 E > 1000 Wh : UEC_max = 1.925 + 0.0002*(E-1000) (保守延伸)
-    // 实际DOE最终规则限值保证符合法规精神。
-    function getMaxUEC_kWh(batteryWh) {
-        if (batteryWh <= 0) return 0;
-        let uecMax = 0;
-        if (batteryWh <= 100) {
-            uecMax = 0.62 + 0.0063 * batteryWh;
-        } else if (batteryWh <= 1000) {
-            uecMax = 1.25 + 0.00075 * (batteryWh - 100);
-        } else {
-            uecMax = 1.925 + 0.0002 * (batteryWh - 1000);
-        }
-        // 确保限值不低于最小物理值
-        return Math.max(uecMax, 0.4);
+    // ========== 1. 自动类别判定 (与Excel嵌套IF一致) ==========
+    function determineProductClass(Er, Umax, isInductive) {
+        if (isInductive && Er <= 5) return 1;
+        if (Er < 100) {
+            if (Umax < 4) return 2;
+            else if (Umax <= 10) return 3;
+            else return 4;
+        } else if (Er >= 100 && Er <= 3000) {
+            if (Umax < 20) return 5;
+            else return 6;
+        } else if (Er > 3000) return 7;
+        return null;
     }
-    
-    // 计算年耗电量UEC (kWh/yr)
-    function calculateUEC(energyPerCycleWh, maintainPowerW, standbyPowerW, maintainHoursPerDay, standbyHoursPerDay) {
-        const cycleEnergyPerYear = energyPerCycleWh * 365;      // Wh/yr
-        const maintainEnergyPerYear = maintainPowerW * maintainHoursPerDay * 365; // Wh/yr
-        const standbyEnergyPerYear = standbyPowerW * standbyHoursPerDay * 365;     // Wh/yr
-        const totalWh = cycleEnergyPerYear + maintainEnergyPerYear + standbyEnergyPerYear;
-        const uecKwh = totalWh / 1000;
-        return {
-            uec: uecKwh,
-            cycleEnergyWhYear: cycleEnergyPerYear,
-            maintainEnergyWhYear: maintainEnergyPerYear,
-            standbyEnergyWhYear: standbyEnergyPerYear,
-            totalWh: totalWh
+
+    // ========== 2. 根据类别和 Eb (平均值) 获取DOE限值 (a*Eb + b 或常数) ==========
+    function getDOELimitByEb(productClass, Eb) {
+        const classCoeff = {
+            1: { a: 0, b: 3.04 },
+            2: { a: 0.144, b: 2.95 },
+            3: { lowThreshold: 10, lowConst: 1.42, highA: 0.0255, highB: 1.16 },
+            4: { a: 0.11, b: 3.18 },
+            5: { a: 0.0257, b: 0.815 },
+            6: { a: 0.0778, b: 2.4 },
+            7: { a: 0.0502, b: 4.53 }
         };
+        if (productClass === 3) {
+            if (Eb < 10) return 1.42;
+            else return 0.0255 * Eb + 1.16;
+        }
+        const coeff = classCoeff[productClass];
+        if (!coeff) return 999;
+        return coeff.a * Eb + coeff.b;
     }
-    
-    // 合规判定主逻辑
-    function evaluateCompliance(batteryWh, energyPerCycleWh, maintainPowerW, standbyPowerW, maintainHours, standbyHours) {
-        // 限值
-        const maintainLimit = MAINTENANCE_LIMIT_W;
-        const standbyLimit = STANDBY_LIMIT_W;
-        const uecMax = getMaxUEC_kWh(batteryWh);
-        const uecData = calculateUEC(energyPerCycleWh, maintainPowerW, standbyPowerW, maintainHours, standbyHours);
-        const uecValue = uecData.uec;
-        
-        const maintainCompliant = maintainPowerW <= maintainLimit;
-        const standbyCompliant = standbyPowerW <= standbyLimit;
-        const uecCompliant = uecValue <= uecMax;
-        const overall = (maintainCompliant && standbyCompliant && uecCompliant);
-        
-        return {
-            overall,
-            maintainCompliant,
-            standbyCompliant,
-            uecCompliant,
-            maintainLimit,
-            standbyLimit,
-            uecMax,
-            uecValue,
-            details: uecData,
-            batteryEnergy: batteryWh,
-            maintainPowerW,
-            standbyPowerW,
-            energyPerCycleWh,
-            maintainHours,
-            standbyHours
+
+    // 获取DOE参数 (n, tam, tsb, toff) 用于UEC计算
+    function getDOEParams(productClass, Er) {
+        const base = {
+            1: { n: 0.15, tam: 20.66, tsb: 0.1, toff: 0 },
+            2: { n: 0.54, tam: 7.82, tsb: 5.29, toff: 0 },
+            3: { n: 0.10, tam: 6.42, tsb: 0.3, toff: 0 },
+            4: { n: 0.50, tam: 16.84, tsb: 0.91, toff: 0 },
+            5: { n: 0.11, tam: 6.52, tsb: 1.16, toff: 0 },
+            6: { n: 0.34, tam: 17.15, tsb: 6.85, toff: 0 },
+            7: { n: 0.32, tam: 8.14, tsb: 7.3, toff: 0 }
         };
+        return base[productClass];
     }
-    
-    // 渲染结果到右侧面板，并可选渲染计算过程
-    let showProcessFlag = false;  // 默认隐藏过程
-    let lastComplianceResult = null; // 存储最新结果用于复制截图
-    
-    function renderResult(complianceResult) {
-        const resultDiv = document.getElementById('resultContent');
-        if (!complianceResult) return;
-        lastComplianceResult = complianceResult;
-        
-        const overallStatus = complianceResult.overall ? "✅ 合规" : "❌ 不合规";
-        const statusClass = complianceResult.overall ? "compliance-pass" : "compliance-fail";
-        
-        // 格式化显示数值
-        const uecValue = complianceResult.uecValue.toFixed(3);
-        const uecMax = complianceResult.uecMax.toFixed(3);
-        const maintainStatus = complianceResult.maintainCompliant ? "✔️ 合规" : "⚠️ 超标";
-        const standbyStatus = complianceResult.standbyCompliant ? "✔️ 合规" : "⚠️ 超标";
-        const uecStatus = complianceResult.uecCompliant ? "✔️ 合规" : "⚠️ 超标";
-        
-        const html = `
-            <div class="result-card ${statusClass}">
-                <div class="status-badge">${overallStatus}</div>
-                <div class="detail-item"><strong>🔍 综合判定</strong> <span>${complianceResult.overall ? '符合CEC/DOE法规要求' : '不符合法规要求，请优化设计'}</span></div>
-                <hr>
-                <div class="detail-item"><span>📊 年耗电量 UEC</span> <span><b>${uecValue} kWh/年</b> (限值 ≤ ${uecMax} kWh/年) ${uecStatus}</span></div>
-                <div class="detail-item"><span>⚙️ 维护模式功率</span> <span>${complianceResult.maintainPowerW.toFixed(3)} W &nbsp; 限值 ≤ ${complianceResult.maintainLimit} W &nbsp; ${maintainStatus}</span></div>
-                <div class="detail-item"><span>💤 待机模式功率</span> <span>${complianceResult.standbyPowerW.toFixed(3)} W &nbsp; 限值 ≤ ${complianceResult.standbyLimit} W &nbsp; ${standbyStatus}</span></div>
-                <div class="detail-item"><span>🔋 电池能量 E_batt</span> <span>${complianceResult.batteryEnergy.toFixed(1)} Wh</span></div>
-                <div class="detail-item"><span>🔄 单循环充电能耗</span> <span>${complianceResult.energyPerCycleWh.toFixed(2)} Wh/cycle</span></div>
-                <div class="detail-item"><span>📅 每日维护时长/待机时长</span> <span>${complianceResult.maintainHours} h / ${complianceResult.standbyHours} h</span></div>
-                <hr>
-                <div class="detail-item"><span>📖 法规引用</span> <span>10 CFR 430.32(z) + Appendix Y</span></div>
-            </div>
-        `;
-        resultDiv.innerHTML = html;
-        
-        // 如果需要显示计算过程，更新过程区域
-        if (showProcessFlag) {
-            renderCalculationProcess(complianceResult);
+
+    // ========== 3. CEC 判定 (基于每个样品的实测Eb) ==========
+    function evaluateCECSample(Eb_sample, E24, Pm, Psb, N) {
+        let e24Limit = 0, powerSumLimit = 0;
+        const powerSum = Pm + Psb;
+        if (Eb_sample < 2.5) {
+            e24Limit = 16 * N;
+            powerSumLimit = 1 * N + 0.0021 * Eb_sample;
+        } else if (Eb_sample >= 2.5 && Eb_sample < 100) {
+            e24Limit = 12 * N + 1.6 * Eb_sample;
+            powerSumLimit = 1 * N + 0.0021 * Eb_sample;
+        } else if (Eb_sample >= 100 && Eb_sample < 1000) {
+            e24Limit = 22 * N + 1.5 * Eb_sample;
+            powerSumLimit = 1 * N + 0.0021 * Eb_sample;
         } else {
-            const procDiv = document.getElementById('calculationProcess');
-            if (procDiv) procDiv.style.display = 'none';
+            e24Limit = 36.4 * N + 1.486 * Eb_sample;
+            powerSumLimit = 1 * N + 0.0021 * Eb_sample;
         }
+        const e24Ok = E24 <= e24Limit;
+        const powerOk = powerSum <= powerSumLimit;
+        return { isOk: e24Ok && powerOk, e24Limit, powerSumLimit, e24Value: E24, powerSumValue: powerSum, e24Ok, powerOk };
     }
-    
-    function renderCalculationProcess(complianceResult) {
-        const procDiv = document.getElementById('calculationProcess');
-        if (!procDiv) return;
-        const d = complianceResult.details;
-        const uecCalc = complianceResult.uecValue;
-        const uecMaxVal = complianceResult.uecMax;
-        // 生成详细步骤
-        let processText = `【详细计算步骤依据 DOE 10 CFR Part 430, Appendix Y】\n`;
-        processText += `1️⃣ 年耗电量 UEC 计算：\n`;
-        processText += `   UEC = (E_cycle × 365 + 365×(P_m×T_m + P_sb×T_sb)) / 1000\n`;
-        processText += `   = (${complianceResult.energyPerCycleWh.toFixed(2)} Wh × 365 + 365 × (${complianceResult.maintainPowerW.toFixed(3)}W × ${complianceResult.maintainHours}h + ${complianceResult.standbyPowerW.toFixed(3)}W × ${complianceResult.standbyHours}h)) / 1000\n`;
-        processText += `   充电年能耗 = ${d.cycleEnergyWhYear.toFixed(1)} Wh\n`;
-        processText += `   维护年能耗 = ${d.maintainEnergyWhYear.toFixed(1)} Wh\n`;
-        processText += `   待机年能耗 = ${d.standbyEnergyWhYear.toFixed(1)} Wh\n`;
-        processText += `   总年耗电 = ${d.totalWh.toFixed(1)} Wh = ${uecCalc.toFixed(4)} kWh/年\n\n`;
-        processText += `2️⃣ UEC 最大限值计算 (基于电池能量 E_batt = ${complianceResult.batteryEnergy.toFixed(2)} Wh)：\n`;
-        if (complianceResult.batteryEnergy <= 100) {
-            processText += `   UEC_max = 0.62 + 0.0063 × E_batt = 0.62 + 0.0063×${complianceResult.batteryEnergy.toFixed(2)} = ${uecMaxVal.toFixed(4)} kWh/年\n`;
-        } else if (complianceResult.batteryEnergy <= 1000) {
-            processText += `   UEC_max = 1.25 + 0.00075 × (E_batt-100) = 1.25 + 0.00075×${(complianceResult.batteryEnergy-100).toFixed(2)} = ${uecMaxVal.toFixed(4)} kWh/年\n`;
+
+    // ========== 4. UEC 计算 (公式Ⅰ/Ⅱ) 并返回公式标识及表达式 ==========
+    function computeUEC(E24, Eb, Pm, Psb, Poff, n, tam, tsb, toff, tcd) {
+        const conditionVal = (tcd - 5) * n;
+        const useFormula1 = (conditionVal <= tam);
+        const energyTerm = E24 - 5 * Pm - Eb;
+        if (useFormula1) {
+            // 公式Ⅰ: UEC = 365 * [ n*(E24-5Pm-Eb)*24/tcd + Pm*(tam - (tcd-5)*n) + Psb*tsb + Poff*toff ] / 1000
+            const term1 = n * energyTerm * 24 / tcd;
+            const term2 = Pm * (tam - (tcd - 5) * n);
+            const term3 = Psb * tsb;
+            const term4 = Poff * toff;
+            let uec = 365 * (term1 + term2 + term3 + term4) / 1000;
+            if (uec < 0) uec = 0;
+            const formulaStr = "UEC = 365 × [ n×(E24-5×Pm-Eb)×24/tcd + Pm×(ta&m - (tcd-5)×n) + Psb×tsb + Poff×toff ] / 1000";
+            return { uec, formula: "Ⅰ", condition: true, formulaExpression: formulaStr };
         } else {
-            processText += `   UEC_max = 1.925 + 0.0002×(E_batt-1000) = ${uecMaxVal.toFixed(4)} kWh/年\n`;
-        }
-        processText += `3️⃣ 模式功率限值：维护模式 ≤ ${complianceResult.maintainLimit} W (实测 ${complianceResult.maintainPowerW.toFixed(3)} W) ${complianceResult.maintainCompliant ? '合规' : '不合规'}\n`;
-        processText += `               待机模式 ≤ ${complianceResult.standbyLimit} W (实测 ${complianceResult.standbyPowerW.toFixed(3)} W) ${complianceResult.standbyCompliant ? '合规' : '不合规'}\n`;
-        processText += `4️⃣ 最终结论：UEC ${uecCalc.toFixed(3)} kWh/年 ${complianceResult.uecCompliant ? '≤' : '>'} ${uecMaxVal.toFixed(3)} kWh/年 → ${complianceResult.uecCompliant ? '合规' : '不合规'}\n`;
-        processText += `   综合三项结果 => 整体 ${complianceResult.overall ? '合规' : '不合规'}。\n`;
-        procDiv.innerText = processText;
-        procDiv.style.display = 'block';
-    }
-    
-    function updateComputation() {
-        // 获取输入值并验证
-        let batteryEnergy = parseFloat(document.getElementById('batteryEnergy').value);
-        let energyPerCycle = parseFloat(document.getElementById('energyPerCycle').value);
-        let maintainPower = parseFloat(document.getElementById('maintainPower').value);
-        let standbyPower = parseFloat(document.getElementById('standbyPower').value);
-        let maintainHours = parseFloat(document.getElementById('maintainHours').value);
-        let standbyHours = parseFloat(document.getElementById('standbyHours').value);
-        
-        if (isNaN(batteryEnergy) || batteryEnergy <= 0) {
-            alert("请正确填写电池能量 (Wh) > 0");
-            return false;
-        }
-        if (isNaN(energyPerCycle) || energyPerCycle <= 0) {
-            alert("请正确填写单次循环交流输入能耗 (Wh/cycle) > 0");
-            return false;
-        }
-        if (isNaN(maintainPower) || maintainPower < 0) {
-            alert("维护模式功率需≥0");
-            return false;
-        }
-        if (isNaN(standbyPower) || standbyPower < 0) {
-            alert("待机功率需≥0");
-            return false;
-        }
-        if (isNaN(maintainHours) || maintainHours < 0) maintainHours = 0;
-        if (isNaN(standbyHours) || standbyHours < 0) standbyHours = 0;
-        // 确保总时间合理性，仅用于计算，无需限制总和
-        const result = evaluateCompliance(batteryEnergy, energyPerCycle, maintainPower, standbyPower, maintainHours, standbyHours);
-        renderResult(result);
-        return result;
-    }
-    
-    // 复制截图 (html2canvas 截取 resultCaptureArea 区域)
-    async function copyScreenshot() {
-        const element = document.getElementById('resultCaptureArea');
-        if (!element) return;
-        try {
-            const canvas = await html2canvas(element, {
-                scale: 2,
-                backgroundColor: '#ffffff',
-                logging: false,
-                useCORS: false
-            });
-            canvas.toBlob(async (blob) => {
-                try {
-                    await navigator.clipboard.write([
-                        new ClipboardItem({
-                            [blob.type]: blob
-                        })
-                    ]);
-                    showToast('✅ 截图已复制到剪贴板！');
-                } catch (err) {
-                    console.error('复制失败', err);
-                    fallbackCopy(canvas);
-                }
-            });
-        } catch (err) {
-            console.error('截图生成失败', err);
-            alert('截图失败，请重试或手动截图');
+            if (tcd - 5 <= 0) throw new Error("tcd 必须 >5 小时");
+            // 公式Ⅱ: UEC = 365 * [ n*(E24-5Pm-Eb)*24/(tcd-5) + Psb*tsb + Poff*toff ] /1000
+            const term1 = n * energyTerm * 24 / (tcd - 5);
+            const term3 = Psb * tsb;
+            const term4 = Poff * toff;
+            let uec = 365 * (term1 + term3 + term4) / 1000;
+            if (uec < 0) uec = 0;
+            const formulaStr = "UEC = 365 × [ n×(E24-5×Pm-Eb)×24/(tcd-5) + Psb×tsb + Poff×toff ] / 1000";
+            return { uec, formula: "Ⅱ", condition: false, formulaExpression: formulaStr };
         }
     }
-    
-    function fallbackCopy(canvas) {
-        // 降级方案：将图片转为 dataURL 然后提示手动保存
-        const dataURL = canvas.toDataURL('image/png');
-        const link = document.createElement('a');
-        link.download = 'compliance_screenshot.png';
-        link.href = dataURL;
-        link.click();
-        showToast('截图已下载，未自动复制到剪贴板，请手动粘贴');
-    }
-    
-    function showToast(msg) {
-        const toast = document.getElementById('toastMsg');
-        if (!toast) return;
-        toast.textContent = msg;
-        toast.style.opacity = '1';
-        setTimeout(() => {
-            toast.style.opacity = '0';
-        }, 2000);
-    }
-    
-    // 保存测试结果 (输入+合规结果)
-    function saveResultsToFile() {
-        if (!lastComplianceResult) {
-            alert('请先点击「判定合规性」计算出结果后再保存');
+
+    // ========== 主计算 ==========
+    async function calculate() {
+        // 获取基础输入
+        const N = parseFloat(document.getElementById('portCount').value);
+        const Er = parseFloat(document.getElementById('ratedEnergy').value);
+        const Umax = parseFloat(document.getElementById('maxVoltage').value);
+        const isInductive = document.getElementById('inductiveConnect').value === 'yes';
+        let tcd = parseFloat(document.getElementById('testDuration').value);
+        const Poff = parseFloat(document.getElementById('poffVal').value);
+
+        if (isNaN(N) || isNaN(Er) || isNaN(Umax) || isNaN(tcd) || isNaN(Poff) || tcd <= 5) {
+            alert("请确保所有基础参数完整，且充电测试时间 tcd > 5 小时");
             return;
         }
-        const productName = document.getElementById('productName').value;
-        const inputs = {
-            productName: productName,
-            batteryEnergy: parseFloat(document.getElementById('batteryEnergy').value),
-            energyPerCycle: parseFloat(document.getElementById('energyPerCycle').value),
-            maintainPower: parseFloat(document.getElementById('maintainPower').value),
-            standbyPower: parseFloat(document.getElementById('standbyPower').value),
-            maintainHours: parseFloat(document.getElementById('maintainHours').value),
-            standbyHours: parseFloat(document.getElementById('standbyHours').value),
-            timestamp: new Date().toISOString()
+
+        // 自动类别
+        const productClass = determineProductClass(Er, Umax, isInductive);
+        if (!productClass) { alert("无法判定产品类别，请检查额定能量和电压"); return; }
+        const doeParams = getDOEParams(productClass, Er);
+        const { n, tam, tsb, toff } = doeParams;
+        const className = {1:"低能耗(感应)",2:"低能耗低电压",3:"低能耗中电压",4:"低能耗高电压",5:"中能耗低电压",6:"中能耗高电压",7:"高能耗"}[productClass];
+        document.getElementById('classNameSpan').innerHTML = `类别 ${productClass} - ${className} (n=${n}, ta&m=${tam}h)`;
+
+        // 样品数据
+        const s1 = {
+            E24: parseFloat(document.getElementById('e24_1').value),
+            Eb: parseFloat(document.getElementById('eb_1').value),
+            Pm: parseFloat(document.getElementById('pm_1').value),
+            Psb: parseFloat(document.getElementById('psb_1').value)
         };
-        const complianceSnapshot = lastComplianceResult ? {
-            overall: lastComplianceResult.overall,
-            uecValue: lastComplianceResult.uecValue,
-            uecMax: lastComplianceResult.uecMax,
-            maintainCompliant: lastComplianceResult.maintainCompliant,
-            standbyCompliant: lastComplianceResult.standbyCompliant,
-            uecCompliant: lastComplianceResult.uecCompliant
-        } : null;
-        const exportObj = {
-            testInputs: inputs,
-            complianceResult: complianceSnapshot,
-            note: "基于10 CFR Part 430 Appendix Y法规计算"
+        const s2 = {
+            E24: parseFloat(document.getElementById('e24_2').value),
+            Eb: parseFloat(document.getElementById('eb_2').value),
+            Pm: parseFloat(document.getElementById('pm_2').value),
+            Psb: parseFloat(document.getElementById('psb_2').value)
         };
-        const jsonStr = JSON.stringify(exportObj, null, 2);
-        const blob = new Blob([jsonStr], {type: "application/json"});
-        const url = URL.createObjectURL(blob);
+        if ([s1, s2].some(s => Object.values(s).some(v => isNaN(v)))) {
+            alert("请完整填写两组样品的 E24, Eb, Pm, Psb");
+            return;
+        }
+
+        // 1. CEC 判定
+        const cec1 = evaluateCECSample(s1.Eb, s1.E24, s1.Pm, s1.Psb, N);
+        const cec2 = evaluateCECSample(s2.Eb, s2.E24, s2.Pm, s2.Psb, N);
+        const cecOverallOK = cec1.isOk && cec2.isOk;
+
+        // 2. UEC 计算
+        let uec1, uec2, formulaUsed, formulaExpression;
+        try {
+            const r1 = computeUEC(s1.E24, s1.Eb, s1.Pm, s1.Psb, Poff, n, tam, tsb, toff, tcd);
+            const r2 = computeUEC(s2.E24, s2.Eb, s2.Pm, s2.Psb, Poff, n, tam, tsb, toff, tcd);
+            uec1 = r1.uec; uec2 = r2.uec;
+            formulaUsed = r1.formula;
+            formulaExpression = r1.formulaExpression;
+        } catch(e) { alert(e.message); return; }
+
+        const meanUec = (uec1 + uec2) / 2;
+        const stdDev = Math.sqrt((uec1-meanUec)**2 + (uec2-meanUec)**2);
+        const tFactor = 12.706;
+        const ucl = meanUec + tFactor * (stdDev / Math.sqrt(2));
+
+        // 3. DOE 联邦限值：基于两个样品 Eb 的平均值
+        const avgEb = (s1.Eb + s2.Eb) / 2;
+        const federalLimit = getDOELimitByEb(productClass, avgEb);
+        
+        // 声明值 = max(样品最大UEC, UCL/1.05)
+        const maxSampleUEC = Math.max(uec1, uec2);
+        const declaredValue = Math.max(maxSampleUEC, ucl / 1.05);
+        const doePass = declaredValue <= federalLimit;
+        
+        const finalCompliance = cecOverallOK && doePass;
+
+        // 构建结果HTML
+        let cecHtml = `<div style="background:#f4f9fe; border-radius:18px; padding:12px 16px;"><h3>📌 CEC 合规判定</h3>`;
+        cecHtml += `<div>样品1: ${cec1.isOk ? '✅ OK' : '❌ NG'}  (E24:${cec1.e24Value.toFixed(2)} ≤ ${cec1.e24Limit.toFixed(2)} Wh, 功率和:${cec1.powerSumValue.toFixed(3)} ≤ ${cec1.powerSumLimit.toFixed(3)} W)</div>`;
+        cecHtml += `<div>样品2: ${cec2.isOk ? '✅ OK' : '❌ NG'}  (E24:${cec2.e24Value.toFixed(2)} ≤ ${cec2.e24Limit.toFixed(2)} Wh, 功率和:${cec2.powerSumValue.toFixed(3)} ≤ ${cec2.powerSumLimit.toFixed(3)} W)</div>`;
+        cecHtml += `<hr><span>CEC 综合: ${cecOverallOK ? '<span class="verdict-pass">符合</span>' : '<span class="verdict-fail">不符合</span>'}</span></div>`;
+
+        // DOE结果中增加UEC公式展示
+        let doeHtml = `<div style="background:#f4f9fe; border-radius:18px; padding:12px 16px; margin-top:12px;"><h3>📘 DOE 能耗判定</h3>`;
+        doeHtml += `<div class="formula-box"><strong>🔢 当前使用的UEC公式 (公式${formulaUsed})：</strong><br>${formulaExpression}</div>`;
+        doeHtml += `<div>🔹 样品1 UEC = ${uec1.toFixed(5)} kWh/yr</div>`;
+        doeHtml += `<div>🔸 样品2 UEC = ${uec2.toFixed(5)} kWh/yr</div>`;
+        doeHtml += `<div>📊 统计值: 均值=${meanUec.toFixed(5)}, UCL=${ucl.toFixed(5)} (t=12.706)</div>`;
+        doeHtml += `<div>📐 两样品 Eb 平均值 = ${avgEb.toFixed(3)} Wh</div>`;
+        doeHtml += `<div>📏 联邦标准限值 = ${federalLimit.toFixed(5)} kWh/yr</div>`;
+        doeHtml += `<div>📌 声明值 = max(样品最大UEC, UCL/1.05) = ${declaredValue.toFixed(5)} kWh/yr</div>`;
+        doeHtml += `<div>✅ DOE判定: ${doePass ? '<span class="verdict-pass">PASS (声明值 ≤ 限值)</span>' : '<span class="verdict-fail">FAIL (声明值 > 限值)</span>'}</div></div>`;
+
+        let finalHtml = `<div style="background:#eef3fc; border-radius:20px; padding:15px;"><h3>🎯 最终综合结论</h3>
+        <div style="font-size:1.2rem;">${finalCompliance ? '<span class="verdict-pass">✅ 合规 PASS</span>' : '<span class="verdict-fail">❌ 不合规 FAIL</span>'}</div>
+        <div class="info-text">自动类别: ${className} (类别${productClass}) | 联邦限值基于两样品 Eb 平均值 (${avgEb.toFixed(2)} Wh)。</div></div>`;
+
+        document.getElementById('resultSummary').innerHTML = finalHtml;
+        document.getElementById('cecDetails').innerHTML = cecHtml;
+        document.getElementById('doeDetails').innerHTML = doeHtml;
+
+        // 详细过程文本（包含完整公式表达式）
+        let processText = `═══════════════════════════════════════════════════
+  CEC/DOE 计算详细过程
+═══════════════════════════════════════════════════
+【基础参数】
+额定能量 Er = ${Er} Wh, 满电电压 Umax = ${Umax} V, 感应连接:${isInductive?'是':'否'}
+→ 自动类别: ${productClass} - ${className}
+端口数 N=${N}, tcd=${tcd}h, Poff=${Poff}W
+DOE参数: n=${n}, ta&m=${tam}h, tsb=${tsb}h, toff=${toff}h
+
+【UEC 公式选择】
+条件 (tcd-5)*n = ${((tcd-5)*n).toFixed(4)} ≤ ta&m(${tam})? ${((tcd-5)*n <= tam) ? '是 → 使用公式Ⅰ' : '否 → 使用公式Ⅱ'}
+当前采用公式${formulaUsed}：
+${formulaExpression}
+
+【CEC 限值 (基于每个样品实测Eb)】
+样品1 Eb=${s1.Eb} → E24限值=${cec1.e24Limit.toFixed(2)}, 功率和限值=${cec1.powerSumLimit.toFixed(4)}
+样品2 Eb=${s2.Eb} → E24限值=${cec2.e24Limit.toFixed(2)}, 功率和限值=${cec2.powerSumLimit.toFixed(4)}
+
+【UEC 计算详情】
+样品1: 
+  能量项 = E24-5Pm-Eb = ${s1.E24} -5×${s1.Pm} -${s1.Eb} = ${(s1.E24-5*s1.Pm-s1.Eb).toFixed(4)}
+  UEC1 = ${uec1.toFixed(6)} kWh/yr
+样品2:
+  能量项 = ${(s2.E24-5*s2.Pm-s2.Eb).toFixed(4)}
+  UEC2 = ${uec2.toFixed(6)} kWh/yr
+
+【统计量计算】
+UEC均值 = (${uec1.toFixed(5)} + ${uec2.toFixed(5)})/2 = ${meanUec.toFixed(5)}
+标准差 = ${stdDev.toFixed(6)}
+UCL = 均值 + 12.706*(标准差/√2) = ${meanUec.toFixed(5)} + 12.706*(${stdDev.toFixed(6)}/1.4142) = ${ucl.toFixed(5)} kWh/yr
+
+【DOE 联邦限值 (基于两样品Eb平均值)】
+样品1 Eb = ${s1.Eb} Wh, 样品2 Eb = ${s2.Eb} Wh
+平均值 Eb_avg = ${avgEb.toFixed(4)} Wh
+联邦标准限值 = ${federalLimit.toFixed(5)} kWh/yr
+声明值 = max(${maxSampleUEC.toFixed(5)}, ${(ucl/1.05).toFixed(5)}) = ${declaredValue.toFixed(5)}
+判定: 声明值 ≤ 联邦限值 ? ${doePass ? '是 → PASS' : '否 → FAIL'}
+
+最终: CEC ${cecOverallOK ? 'PASS' : 'FAIL'} , DOE ${doePass ? 'PASS' : 'FAIL'} → 综合 ${finalCompliance ? '合规' : '不合规'}
+生成时间: ${new Date().toLocaleString()}`;
+
+        document.getElementById('calcProcess').innerText = processText;
+        window.lastReportText = processText;
+
+        document.getElementById('resultContainer').style.display = 'block';
+        document.getElementById('toggleProcessBtn').disabled = false;
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }
+
+    // 辅助函数
+    async function copyScreenshot() {
+        const el = document.getElementById('resultContainer');
+        if (!el || el.style.display === 'none') { alert("请先计算"); return; }
+        try {
+            const canvas = await html2canvas(el, { scale: 2, backgroundColor: '#ffffff' });
+            canvas.toBlob(async blob => {
+                try {
+                    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+                    alert("截图已复制到剪贴板");
+                } catch(e) { alert("剪贴板错误: "+e.message); }
+            });
+        } catch(e) { alert("截图失败: "+e.message); }
+    }
+    function saveResult() {
+        if (!window.lastReportText) { alert("请先计算"); return; }
+        const blob = new Blob([window.lastReportText], {type: 'text/plain'});
         const a = document.createElement('a');
+        const url = URL.createObjectURL(blob);
         a.href = url;
-        a.download = `charger_test_${new Date().toISOString().slice(0,19)}.json`;
-        document.body.appendChild(a);
+        a.download = `CEC_DOE_Result_${new Date().toISOString().slice(0,19)}.txt`;
         a.click();
-        document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        showToast('✅ 测试结果已保存为JSON文件');
     }
-    
-    // 加载测试结果
-    function loadResultFromFile(file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                const data = JSON.parse(e.target.result);
-                if (data.testInputs) {
-                    document.getElementById('productName').value = data.testInputs.productName || '';
-                    document.getElementById('batteryEnergy').value = data.testInputs.batteryEnergy;
-                    document.getElementById('energyPerCycle').value = data.testInputs.energyPerCycle;
-                    document.getElementById('maintainPower').value = data.testInputs.maintainPower;
-                    document.getElementById('standbyPower').value = data.testInputs.standbyPower;
-                    document.getElementById('maintainHours').value = data.testInputs.maintainHours;
-                    document.getElementById('standbyHours').value = data.testInputs.standbyHours;
-                    // 自动重新计算
-                    updateComputation();
-                    showToast('加载成功，已自动计算合规性');
-                } else {
-                    alert('文件格式不正确');
-                }
-            } catch (err) {
-                alert('解析失败，请上传正确的JSON文件');
-            }
-        };
-        reader.readAsText(file);
+    function toggleProcess() {
+        const div = document.getElementById('calcProcess');
+        div.style.display = div.style.display === 'none' ? 'block' : 'none';
     }
-    
-    // 事件绑定
-    document.getElementById('calcBtn').addEventListener('click', () => updateComputation());
-    document.getElementById('toggleProcessBtn').addEventListener('click', () => {
-        showProcessFlag = !showProcessFlag;
-        const procDiv = document.getElementById('calculationProcess');
-        if (showProcessFlag && lastComplianceResult) {
-            renderCalculationProcess(lastComplianceResult);
-            procDiv.style.display = 'block';
-        } else {
-            if (procDiv) procDiv.style.display = 'none';
+    function updateAutoClassDisplay() {
+        const Er = parseFloat(document.getElementById('ratedEnergy').value);
+        const Umax = parseFloat(document.getElementById('maxVoltage').value);
+        const isInductive = document.getElementById('inductiveConnect').value === 'yes';
+        if (!isNaN(Er) && !isNaN(Umax)) {
+            const cls = determineProductClass(Er, Umax, isInductive);
+            if (cls) {
+                const name = {1:"低能耗(感应)",2:"低能耗低电压",3:"低能耗中电压",4:"低能耗高电压",5:"中能耗低电压",6:"中能耗高电压",7:"高能耗"}[cls];
+                document.getElementById('classNameSpan').innerHTML = `类别 ${cls} - ${name}`;
+            } else document.getElementById('classNameSpan').innerHTML = `无法判定`;
         }
-        const btn = document.getElementById('toggleProcessBtn');
-        btn.textContent = showProcessFlag ? '📕 隐藏计算过程' : '📘 显示计算过程';
-    });
+    }
+    document.getElementById('ratedEnergy').addEventListener('input', updateAutoClassDisplay);
+    document.getElementById('maxVoltage').addEventListener('input', updateAutoClassDisplay);
+    document.getElementById('inductiveConnect').addEventListener('change', updateAutoClassDisplay);
+    window.addEventListener('load', updateAutoClassDisplay);
+    document.getElementById('calcBtn').addEventListener('click', calculate);
+    document.getElementById('toggleProcessBtn').addEventListener('click', toggleProcess);
     document.getElementById('copyScreenshotBtn').addEventListener('click', copyScreenshot);
-    document.getElementById('saveResultBtn').addEventListener('click', saveResultsToFile);
-    const fileInput = document.getElementById('loadResultFile');
-    document.getElementById('loadResultBtn').addEventListener('click', () => {
-        fileInput.click();
-    });
-    fileInput.addEventListener('change', (e) => {
-        if (e.target.files.length > 0) {
-            loadResultFromFile(e.target.files[0]);
-            fileInput.value = '';
-        }
-    });
-    
-    // 初始加载默认演示一个合规测试 (预设典型数值已经合规)
-    window.addEventListener('DOMContentLoaded', () => {
-        updateComputation();
-        // 默认显示过程隐藏
-        showProcessFlag = false;
-        document.getElementById('toggleProcessBtn').textContent = '📘 显示计算过程';
-    });
+    document.getElementById('saveResultBtn').addEventListener('click', saveResult);
+    document.getElementById('resultContainer').style.display = 'none';
 </script>
 </body>
 </html>
