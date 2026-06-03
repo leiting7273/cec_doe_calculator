@@ -3,440 +3,921 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>电池充电系统 CEC/DOE 计算器</title>
-    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <title>CEC/DOE 电池充电器能耗分析系统 | 精确统计版</title>
     <style>
-        * { box-sizing: border-box; font-family: system-ui, 'Segoe UI', 'Arial', sans-serif; }
-        body { max-width: 1200px; margin: 20px auto; padding: 0 20px; background: #eef2f5; }
-        h1 { text-align: center; color: #1e466e; margin-bottom: 20px; font-size: 1.8rem; }
-        .card { background: white; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.08); padding: 25px 30px; margin-bottom: 25px; }
-        .section-title { font-size: 1.4rem; font-weight: 600; border-left: 5px solid #2c7da0; padding-left: 15px; margin: 0 0 20px 0; color: #1f5068; }
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px 25px; margin-bottom: 15px; }
-        .form-field { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
-        .form-field label { width: 180px; font-weight: 500; color: #2c3e50; font-size: 0.9rem; }
-        .form-field input, .form-field select { flex: 1; min-width: 120px; padding: 8px 12px; border: 1px solid #ccd7e4; border-radius: 12px; font-size: 0.9rem; background: #fefefe; }
-        .form-field input:focus, .form-field select:focus { border-color: #2c7da0; outline: none; box-shadow: 0 0 0 2px rgba(44,125,160,0.2); }
-        .sample-group { background: #f9fbfd; padding: 15px 20px; border-radius: 18px; margin-top: 15px; }
-        .sample-title { font-weight: 700; font-size: 1.1rem; color: #1f5068; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
-        .btn-group { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 25px; justify-content: center; }
-        .btn { background: #2c7da0; color: white; border: none; padding: 10px 24px; border-radius: 40px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
-        .btn-secondary { background: #5f6c7a; }
-        .btn:hover { background: #1f5e7a; transform: translateY(-1px); }
-        .result-card { background: white; border-radius: 24px; padding: 20px 25px; }
-        .verdict-pass { color: #1e7e34; background: #e0f3e8; display: inline-block; padding: 4px 14px; border-radius: 40px; font-weight: bold; }
-        .verdict-fail { color: #c0392b; background: #fbe9e7; display: inline-block; padding: 4px 14px; border-radius: 40px; font-weight: bold; }
-        .info-text { background: #f0f4f9; padding: 12px 18px; border-radius: 16px; font-size: 0.85rem; margin: 10px 0; }
-        .process-box { background: #f8f9fc; border-left: 4px solid #2c7da0; padding: 16px 20px; font-family: 'Courier New', monospace; font-size: 0.8rem; white-space: pre-wrap; line-height: 1.5; max-height: 450px; overflow-y: auto; border-radius: 16px; margin-top: 20px; }
-        hr { margin: 15px 0; border-color: #e2e8f0; }
-        .flex-between { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-        .auto-class { background: #e9ecef; padding: 5px 12px; border-radius: 30px; display: inline-block; font-weight: bold; }
-        .formula-box { background: #eef2fa; border-radius: 14px; padding: 10px 15px; margin: 12px 0; font-family: monospace; font-size: 0.85rem; border-left: 4px solid #2c7da0; }
-        @media (max-width: 700px) { .form-field label { width: 100%; } .card { padding: 20px; } }
-        /* 用于临时克隆截图的容器样式 */
-        .screenshot-clone {
-            position: absolute;
-            top: -9999px;
-            left: -9999px;
-            width: 1100px;
-            background: #eef2f5;
-            padding: 20px;
-            z-index: -1;
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+        }
+        body {
+            background: #eef2f8;
+            margin: 0;
+            padding: 20px 16px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.1);
+            overflow: hidden;
+            padding: 20px 24px;
+        }
+        h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin: 0 0 0.2rem 0;
+            color: #0a3b4f;
+            letter-spacing: -0.3px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .badge {
+            background: #e6f7ff;
+            padding: 4px 10px;
+            border-radius: 40px;
+            font-size: 0.65rem;
+            font-weight: normal;
+            color: #0077b6;
+        }
+        .sub {
+            color: #2c3e50;
+            border-left: 4px solid #2c7da0;
+            padding-left: 14px;
+            margin-bottom: 24px;
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+        .params-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            background: #f9fbfe;
+            padding: 16px 20px;
+            border-radius: 24px;
+            margin-bottom: 28px;
+            border: 1px solid #e2edf2;
+        }
+        .param-card {
+            flex: 1 1 140px;
+            min-width: 120px;
+        }
+        .param-card label {
+            font-weight: 600;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            color: #1e5f7a;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+            display: block;
+        }
+        .param-card input, .param-card select {
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: 20px;
+            border: 1px solid #cbdde9;
+            background: white;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .info-chip {
+            background: #eef2fa;
+            border-radius: 28px;
+            padding: 5px 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            display: inline-block;
+            margin-top: 6px;
+        }
+        .samples-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        .sample-panel {
+            flex: 1;
+            background: #ffffff;
+            border-radius: 24px;
+            border: 1px solid #e9f0f5;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            padding: 16px 18px;
+        }
+        .sample-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            border-left: 4px solid #2c7da0;
+            padding-left: 12px;
+        }
+        .sample-title input {
+            width: 60px;
+            font-weight: 600;
+            border: 1px solid #cbdde9;
+            border-radius: 30px;
+            padding: 4px 10px;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+        .data-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .data-field {
+            flex: 1;
+            min-width: 90px;
+        }
+        .data-field label {
+            font-size: 0.6rem;
+            font-weight: 600;
+            color: #2c5a74;
+        }
+        .data-field input {
+            width: 100%;
+            padding: 6px 8px;
+            border-radius: 18px;
+            border: 1px solid #cfdfea;
+            font-size: 0.8rem;
+        }
+        button {
+            background: #2c7da0;
+            border: none;
+            color: white;
+            padding: 8px 18px;
+            border-radius: 40px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.8rem;
+        }
+        button.outline {
+            background: #eef2fa;
+            color: #1f5e7a;
+            border: 1px solid #cbdde9;
+        }
+        button.danger, button.outline.danger {
+            background: #e63946;
+            color: white;
+            border-color: #c92a2a;
+        }
+        button.danger:hover, button.outline.danger:hover {
+            background: #c92a2a;
+            transform: scale(0.98);
+        }
+        .action-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: flex-end;
+            margin: 16px 0 8px;
+        }
+        .result-table-wrapper {
+            overflow-x: auto;
+            margin: 20px 0 18px;
+            border-radius: 20px;
+            border: 1px solid #e7edf3;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.78rem;
+            min-width: 580px;
+        }
+        th {
+            background: #f1f6fd;
+            padding: 10px 6px;
+            font-weight: 700;
+            color: #144e6b;
+            text-align: center;
+        }
+        td {
+            padding: 10px 4px;
+            text-align: center;
+            border-bottom: 1px solid #eef2f8;
+        }
+        .pass-badge {
+            background: #dff9e6;
+            color: #1f7840;
+            font-weight: bold;
+            border-radius: 40px;
+            padding: 3px 10px;
+            display: inline-block;
+        }
+        .fail-badge {
+            background: #ffe6e5;
+            color: #bc3900;
+            font-weight: bold;
+            border-radius: 40px;
+            padding: 3px 10px;
+        }
+        .detail-box {
+            background: #fefaf0;
+            border-left: 5px solid #f4b942;
+            border-radius: 20px;
+            padding: 18px 22px;
+            margin-top: 22px;
+            font-family: 'SF Mono', 'Menlo', monospace;
+            font-size: 0.75rem;
+            line-height: 1.45;
+            white-space: pre-wrap;
+            display: none;
+        }
+        .footer-note {
+            font-size: 0.65rem;
+            text-align: center;
+            color: #6c86a3;
+            margin-top: 24px;
+            border-top: 1px solid #e2edf2;
+            padding-top: 16px;
+        }
+        /* 历史模态框样式 */
+        .modal-mask {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            visibility: hidden;
+            opacity: 0;
+            transition: 0.2s;
+        }
+        .modal-mask.active {
+            visibility: visible;
+            opacity: 1;
+        }
+        .modal-container {
+            background: white;
+            width: 90%;
+            max-width: 500px;
+            max-height: 70vh;
+            border-radius: 32px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 35px rgba(0,0,0,0.2);
+        }
+        .modal-header {
+            padding: 16px 20px;
+            background: #f1f6fd;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #dce5ec;
+        }
+        .modal-header button {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+            color: #666;
+        }
+        .modal-list {
+            overflow-y: auto;
+            padding: 10px 0;
+        }
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            border-bottom: 1px solid #eef2f8;
+            flex-wrap: wrap;
+        }
+        .history-info {
+            font-size: 0.85rem;
+            flex: 1;
+            word-break: break-word;
+        }
+        .history-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        .history-buttons button {
+            padding: 4px 12px;
+            font-size: 0.7rem;
+        }
+        .empty-history {
+            text-align: center;
+            padding: 30px;
+            color: #999;
+        }
+        @media (max-width: 680px) {
+            .container { padding: 16px; }
+            .sample-panel { padding: 12px; }
+            .param-card { min-width: 100px; }
+            button { padding: 6px 14px; font-size: 0.75rem; }
+            .info-chip { font-size: 0.7rem; }
+            .history-item { flex-direction: column; align-items: flex-start; gap: 8px; }
+            .history-buttons { align-self: flex-end; }
         }
     </style>
 </head>
 <body>
+<div class="container">
+    <h1>🔋 电池充电器能耗验证系统 <span class="badge">CEC / DOE 合规</span></h1>
+    <div class="sub">双样品UEC统计(UCL) · 联邦标准比对</div>
 
-<h1>⚡ 电池充电系统 CEC / DOE 合规计算器</h1>
-
-<div class="card" id="baseParamsCard">
-    <div class="section-title">📋 基础参数</div>
-    <div class="form-grid">
-        <div class="form-field"><label>🔌 充电端口数量 N :</label><input type="number" id="portCount" value="1" step="1" min="1"></div>
-        <div class="form-field"><label>🔋 电池额定能量 Er (Wh) :</label><input type="number" id="ratedEnergy" value="66.24" step="0.01"></div>
-        <div class="form-field"><label>⚡ 电池满电电压 Umax (V) :</label><input type="number" id="maxVoltage" value="16.6" step="0.1"></div>
-        <div class="form-field"><label>🔌 是否感应连接？</label><select id="inductiveConnect"><option value="no" selected>否</option><option value="yes">是</option></select></div>
-        <div class="form-field"><label>⏱️ 充电测试时间 tcd (小时) :</label><input type="number" id="testDuration" value="24" step="0.1"></div>
-        <div class="form-field"><label>📴 关机功率 Poff (W) :</label><input type="number" id="poffVal" value="0" step="0.001"></div>
+    <!-- 全局配置 -->
+    <div class="params-grid">
+        <div class="param-card"><label>🔌 N (充电端口数)</label><input type="number" id="globalN" value="1" step="1" min="1"></div>
+        <div class="param-card"><label>🔋 Er (额定能量 Wh)</label><input type="number" id="globalEr" value="66.24" step="any"></div>
+        <div class="param-card"><label>⚡ Umax (满电电压 V)</label><input type="number" id="globalUmax" value="16.60" step="any"></div>
+        <div class="param-card"><label>⏱️ tcd (测试小时)</label><input type="number" id="globalTcd" value="24" step="1" min="5"></div>
+        <div class="param-card"><label>📡 感应连接</label><select id="globalInductive"><option value="true">是</option><option value="false" selected>否</option></select></div>
+        <div class="param-card"><div class="info-chip" id="catDisplay">类别: --</div><div class="info-chip" id="formulaDisplay" style="margin-top:6px;">公式: --</div></div>
     </div>
-    <div class="info-text" id="autoClassDisplay">🤖 自动识别产品类别: <span id="classNameSpan" class="auto-class">--</span> &nbsp; (依据Er和Umax，符合DOE表3.3.3)</div>
+
+    <!-- 双样品区 -->
+    <div class="samples-row">
+        <div class="sample-panel">
+            <div class="sample-title">🧪 样品 <input type="text" id="sampleName1" value="1#" style="width: 55px;"></div>
+            <div class="data-row"><div class="data-field"><label>E24 (Wh)</label><input type="number" id="e24_1" placeholder="累计充电24H能耗" step="any"></div>
+            <div class="data-field"><label>Eb (Wh)</label><input type="number" id="eb_1" placeholder="充满电后电池放电能量" step="any"></div>
+            <div class="data-field"><label>Pm (W)</label><input type="number" id="pm_1" placeholder="24H后功率（主机+基站）" step="any"></div></div>
+            <div class="data-row"><div class="data-field"><label>Psb (W)</label><input type="number" id="psb_1" placeholder="适配器+充电座功率（或基站待机功率）" step="any"></div>
+            <div class="data-field"><label>Poff (W,一般不用改)</label><input type="number" id="poff_1" value="0" placeholder="默认0" step="any"></div>
+            <div class="data-field"></div></div>
+            <div style="font-size:0.65rem; margin-top:6px;" id="cecHint1"></div>
+        </div>
+        <div class="sample-panel">
+            <div class="sample-title">🧪 样品 <input type="text" id="sampleName2" value="2#" style="width: 55px;"></div>
+            <div class="data-row"><div class="data-field"><label>E24 (Wh)</label><input type="number" id="e24_2" placeholder="累计充电24H能耗" step="any"></div>
+            <div class="data-field"><label>Eb (Wh)</label><input type="number" id="eb_2" placeholder="充满电后电池放电能量" step="any"></div>
+            <div class="data-field"><label>Pm (W)</label><input type="number" id="pm_2" placeholder="24H后功率（主机+基站）" step="any"></div></div>
+            <div class="data-row"><div class="data-field"><label>Psb (W)</label><input type="number" id="psb_2" placeholder="适配器+充电座功率（或基站待机功率）" step="any"></div>
+            <div class="data-field"><label>Poff (W,一般不用改)</label><input type="number" id="poff_2" value="0" placeholder="默认0" step="any"></div>
+            <div class="data-field"></div></div>
+            <div style="font-size:0.65rem; margin-top:6px;" id="cecHint2"></div>
+        </div>
+    </div>
+
+    <div class="action-bar">
+        <button id="calcBtn">💾 计算 & 保存</button>
+        <button id="clearDataBtn" class="outline danger">🗑️ 清空样品数据</button>
+        <button id="historyBtn" class="outline danger">📚 加载历史数据</button>
+        <button id="toggleDetailBtn" class="outline">📄 展开/隐藏 详细推导</button>
+    </div>
+
+    <!-- 结果表格 -->
+    <div class="result-table-wrapper">
+        <table id="resultMasterTable">
+            <thead>
+                <tr><th>项目 (Item)</th><th id="thName1">1#</th><th id="thName2">2#</th><th>平均值 (Mean)</th><th>标准偏差 (SD)</th><th>UCL</th><th>申报值 (Declared)</th><th>联邦标准 (限值)</th><th>判定 (Verdict)</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>E24 (Wh)</td><td id="res_e24_1">-</td><td id="res_e24_2">-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+                <tr><td>Eb (Wh)</td><td id="res_eb_1">-</td><td id="res_eb_2">-</td><td id="avg_eb">-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+                <tr><td>Pm (W)</td><td id="res_pm_1">-</td><td id="res_pm_2">-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+                <tr><td>Psb (W)</td><td id="res_psb_1">-</td><td id="res_psb_2">-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+                <tr><td><strong>UEC (kWh/yr)</strong></td><td id="uec1_val">-</td><td id="uec2_val">-</td><td id="uec_mean">-</td><td id="uec_sd">-</td><td id="uec_ucl">-</td><td id="declared_val">-</td><td id="limit_val">-</td><td id="final_verdict_cell">-</td></tr>
+                <tr><td>CEC 合格性 <br>(E24 & Pm+Psb)</td><td id="cec_pass1">-</td><td id="cec_pass2">-</td><td colspan="6" style="background:#F8FAFE;">仅适用于 tcd = 24h 标准</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 详细计算过程面板 -->
+    <div id="detailPanel" class="detail-box">
+        <strong>📐 逐步详细计算</strong><br>
+        <div id="detailContent"></div>
+    </div>
+    <div class="footer-note">★ 依据CEC法规: 若tcd≠24h仅UEC能耗参考, UCL = 均值 + 12.706*(SD/√2) | 申报值 = max(UEC₁, UEC₂, UCL/1.05) | 最大允许标准基于平均Eb。<br>✅ 所有数据自动缓存至浏览器 | 点击“计算&保存”将同时保存当前样品数据到历史记录。</div>
 </div>
 
-<div class="card" id="sampleDataCard">
-    <div class="section-title">🧪 样品测试数据 (两组样品)</div>
-    <div style="display: flex; flex-wrap: wrap; gap: 25px;">
-        <div style="flex:1; min-width: 260px;">
-            <div class="sample-group">
-                <div class="sample-title">📊 样品 #1</div>
-                <div class="form-field"><label>E24 (整机24h功耗) Wh :</label><input type="number" id="e24_1" value="110.31" step="0.01"></div>
-                <div class="form-field"><label>Eb (电池放电能量) Wh :</label><input type="number" id="eb_1" value="76.136" step="0.01"></div>
-                <div class="form-field"><label>Pm (24h后功率 P2) W :</label><input type="number" id="pm_1" value="0.334" step="0.001"></div>
-                <div class="form-field"><label>Psb (待机功率 P1) W :</label><input type="number" id="psb_1" value="0.258" step="0.001"></div>
-            </div>
+<!-- 历史记录模态框 -->
+<div id="historyModal" class="modal-mask">
+    <div class="modal-container">
+        <div class="modal-header">
+            <span>📋 选择历史数据</span>
+            <button id="closeModalBtn">&times;</button>
         </div>
-        <div style="flex:1; min-width: 260px;">
-            <div class="sample-group">
-                <div class="sample-title">📊 样品 #2</div>
-                <div class="form-field"><label>E24 (整机24h功耗) Wh :</label><input type="number" id="e24_2" value="111.52" step="0.01"></div>
-                <div class="form-field"><label>Eb (电池放电能量) Wh :</label><input type="number" id="eb_2" value="75.783" step="0.01"></div>
-                <div class="form-field"><label>Pm (24h后功率 P2) W :</label><input type="number" id="pm_2" value="0.341" step="0.001"></div>
-                <div class="form-field"><label>Psb (待机功率 P1) W :</label><input type="number" id="psb_2" value="0.253" step="0.001"></div>
-            </div>
-        </div>
-    </div>
-    <div class="btn-group">
-        <button class="btn" id="calcBtn">📐 完整计算 (CEC + DOE)</button>
-        <button class="btn btn-secondary" id="toggleProcessBtn" disabled>📄 显示/隐藏 详细过程</button>
-    </div>
-</div>
-
-<div id="resultContainer" style="display: none;">
-    <div class="card result-card" id="resultCard">
-        <div class="section-title">✅ 合规判定报告</div>
-        <div id="resultSummary"></div>
-        <div id="cecDetails" style="margin-top: 15px;"></div>
-        <div id="doeDetails" style="margin-top: 15px;"></div>
-        <div id="calcProcess" class="process-box" style="display: none;"></div>
-        <div class="btn-group" style="margin-top: 20px;">
-            <button class="btn" id="copyScreenshotBtn">📸 复制截图到剪贴板</button>
-            <button class="btn btn-secondary" id="saveResultBtn">💾 导出测试结果 (.txt)</button>
+        <div id="historyList" class="modal-list">
+            <!-- 动态生成历史项 -->
         </div>
     </div>
 </div>
 
 <script>
-    // ========== 1. 自动类别判定 (与Excel嵌套IF一致) ==========
-    function determineProductClass(Er, Umax, isInductive) {
-        if (isInductive && Er <= 5) return 1;
+    // ---------- 类别常数表 (不变) ----------
+    const CATEGORY_DATA = {
+        1: { tam: 20.66, tsb: 0.1, toff: 0, n: 0.15 },
+        2: { tam: 7.82, tsb: 5.29, toff: 0, n: 0.54 },
+        3: { tam: 6.42, tsb: 0.3, toff: 0, n: 0.1 },
+        4: { tam: 16.84, tsb: 0.91, toff: 0, n: 0.5 },
+        5: { tam: 6.52, tsb: 1.16, toff: 0, n: 0.11 },
+        6: { tam: 17.15, tsb: 6.85, toff: 0, n: 0.34 },
+        7: { tam: 8.14, tsb: 7.3, toff: 0, n: 0.32 }
+    };
+
+    function determineCategory(Er, Umax, inductive) {
+        if (Er < 5 && inductive) return 1;
         if (Er < 100) {
             if (Umax < 4) return 2;
-            else if (Umax <= 10) return 3;
-            else return 4;
-        } else if (Er >= 100 && Er <= 3000) {
+            if (Umax >= 4 && Umax <= 10) return 3;
+            if (Umax > 10) return 4;
+        }
+        if (Er >= 100 && Er <= 3000) {
             if (Umax < 20) return 5;
-            else return 6;
-        } else if (Er > 3000) return 7;
-        return null;
-    }
-
-    // ========== 2. 根据类别和 Eb (平均值) 获取DOE限值 (a*Eb + b 或常数) ==========
-    function getDOELimitByEb(productClass, Eb) {
-        const classCoeff = {
-            1: { a: 0, b: 3.04 },
-            2: { a: 0.144, b: 2.95 },
-            3: { lowThreshold: 10, lowConst: 1.42, highA: 0.0255, highB: 1.16 },
-            4: { a: 0.11, b: 3.18 },
-            5: { a: 0.0257, b: 0.815 },
-            6: { a: 0.0778, b: 2.4 },
-            7: { a: 0.0502, b: 4.53 }
-        };
-        if (productClass === 3) {
-            if (Eb < 10) return 1.42;
-            else return 0.0255 * Eb + 1.16;
+            if (Umax > 20) return 6;
         }
-        const coeff = classCoeff[productClass];
-        if (!coeff) return 999;
-        return coeff.a * Eb + coeff.b;
+        if (Er > 3000 && Umax > 20) return 7;
+        if (Er >= 100 && Er <= 3000) return 6;
+        return 4;
     }
 
-    // 获取DOE参数 (n, tam, tsb, toff) 用于UEC计算
-    function getDOEParams(productClass, Er) {
-        const base = {
-            1: { n: 0.15, tam: 20.66, tsb: 0.1, toff: 0 },
-            2: { n: 0.54, tam: 7.82, tsb: 5.29, toff: 0 },
-            3: { n: 0.10, tam: 6.42, tsb: 0.3, toff: 0 },
-            4: { n: 0.50, tam: 16.84, tsb: 0.91, toff: 0 },
-            5: { n: 0.11, tam: 6.52, tsb: 1.16, toff: 0 },
-            6: { n: 0.34, tam: 17.15, tsb: 6.85, toff: 0 },
-            7: { n: 0.32, tam: 8.14, tsb: 7.3, toff: 0 }
-        };
-        return base[productClass];
+    function isFormulaOne(tcd, nConst, tam) {
+        return !((tcd - 5) * nConst > tam);
     }
 
-    // ========== 3. CEC 判定 (基于每个样品的实测Eb) ==========
-    function evaluateCECSample(Eb_sample, E24, Pm, Psb, N) {
-        let e24Limit = 0, powerSumLimit = 0;
-        const powerSum = Pm + Psb;
-        if (Eb_sample < 2.5) {
-            e24Limit = 16 * N;
-            powerSumLimit = 1 * N + 0.0021 * Eb_sample;
-        } else if (Eb_sample >= 2.5 && Eb_sample < 100) {
-            e24Limit = 12 * N + 1.6 * Eb_sample;
-            powerSumLimit = 1 * N + 0.0021 * Eb_sample;
-        } else if (Eb_sample >= 100 && Eb_sample < 1000) {
-            e24Limit = 22 * N + 1.5 * Eb_sample;
-            powerSumLimit = 1 * N + 0.0021 * Eb_sample;
+    function computeUEC_kWh(sample, category, tcd, constObj) {
+        const { E24, Eb, Pm, Psb, Poff } = sample;
+        const { tam, tsb, toff, n } = constObj;
+        const useFormulaOne = isFormulaOne(tcd, n, tam);
+        const baseEnergy = E24 - 5 * Pm - Eb;
+        let mainTerm = 0;
+        if (useFormulaOne) {
+            const part1 = n * baseEnergy * 24 / tcd;
+            const deltaTam = tam - (tcd - 5) * n;
+            const part2 = Pm * (deltaTam > 0 ? deltaTam : 0);
+            mainTerm = part1 + part2;
         } else {
-            e24Limit = 36.4 * N + 1.486 * Eb_sample;
-            powerSumLimit = 1 * N + 0.0021 * Eb_sample;
+            if (tcd - 5 <= 0) return 0;
+            mainTerm = n * baseEnergy * 24 / (tcd - 5);
         }
-        const e24Ok = E24 <= e24Limit;
-        const powerOk = powerSum <= powerSumLimit;
-        return { isOk: e24Ok && powerOk, e24Limit, powerSumLimit, e24Value: E24, powerSumValue: powerSum, e24Ok, powerOk };
+        const staticPart = Psb * tsb + Poff * toff;
+        let uecWh = 365 * (mainTerm + staticPart);
+        if (uecWh < 0) uecWh = 0;
+        return uecWh / 1000;
     }
 
-    // ========== 4. UEC 计算 (公式Ⅰ/Ⅱ) 并返回公式标识及表达式 ==========
-    function computeUEC(E24, Eb, Pm, Psb, Poff, n, tam, tsb, toff, tcd) {
-        const conditionVal = (tcd - 5) * n;
-        const useFormula1 = (conditionVal <= tam);
-        const energyTerm = E24 - 5 * Pm - Eb;
-        if (useFormula1) {
-            const term1 = n * energyTerm * 24 / tcd;
-            const term2 = Pm * (tam - (tcd - 5) * n);
-            const term3 = Psb * tsb;
-            const term4 = Poff * toff;
-            let uec = 365 * (term1 + term2 + term3 + term4) / 1000;
-            if (uec < 0) uec = 0;
-            const formulaStr = "UEC = 365 × [ n×(E24-5×Pm-Eb)×24/tcd + Pm×(ta&m - (tcd-5)×n) + Psb×tsb + Poff×toff ] / 1000";
-            return { uec, formula: "Ⅰ", condition: true, formulaExpression: formulaStr };
+    function checkSingleCEC(N, E24, Eb, Pm, Psb) {
+        const sumPower = Pm + Psb;
+        let condE24 = false, condPower = false;
+        if (Eb <= 2.5) {
+            condE24 = E24 <= 16 * N;
+            condPower = sumPower <= N + 0.0021 * Eb;
+        } else if (Eb <= 100) {
+            condE24 = E24 <= 12 * N + 1.6 * Eb;
+            condPower = sumPower <= N + 0.0021 * Eb;
+        } else if (Eb <= 1000) {
+            condE24 = E24 <= 22 * N + 1.5 * Eb;
+            condPower = sumPower <= N + 0.0021 * Eb;
         } else {
-            if (tcd - 5 <= 0) throw new Error("tcd 必须 >5 小时");
-            const term1 = n * energyTerm * 24 / (tcd - 5);
-            const term3 = Psb * tsb;
-            const term4 = Poff * toff;
-            let uec = 365 * (term1 + term3 + term4) / 1000;
-            if (uec < 0) uec = 0;
-            const formulaStr = "UEC = 365 × [ n×(E24-5×Pm-Eb)×24/(tcd-5) + Psb×tsb + Poff×toff ] / 1000";
-            return { uec, formula: "Ⅱ", condition: false, formulaExpression: formulaStr };
+            condE24 = E24 <= 36.4 * N + 1.486 * Eb;
+            condPower = sumPower <= N + 0.0021 * Eb;
+        }
+        return condE24 && condPower;
+    }
+
+    function getMaxAllowance(category, avgEb) {
+        switch(category) {
+            case 1: return 3.04;
+            case 2: return 0.144 * avgEb + 2.95;
+            case 3: return avgEb < 10 ? 1.42 : 0.0255 * avgEb + 1.16;
+            case 4: return 0.11 * avgEb + 3.18;
+            case 5: return 0.0257 * avgEb + 0.815;
+            case 6: return 0.0778 * avgEb + 2.4;
+            case 7: return 0.0502 * avgEb + 4.53;
+            default: return 999;
         }
     }
 
-    // ========== 主计算 ==========
-    async function calculate() {
-        const N = parseFloat(document.getElementById('portCount').value);
-        const Er = parseFloat(document.getElementById('ratedEnergy').value);
-        const Umax = parseFloat(document.getElementById('maxVoltage').value);
-        const isInductive = document.getElementById('inductiveConnect').value === 'yes';
-        let tcd = parseFloat(document.getElementById('testDuration').value);
-        const Poff = parseFloat(document.getElementById('poffVal').value);
+    // ---------- 持久化存储（当前界面数据） ----------
+    const STORAGE_KEY = "bat_charger_energy_data";
+    function saveAllDataToLocal() {
+        const data = {
+            globalN: document.getElementById('globalN').value,
+            globalEr: document.getElementById('globalEr').value,
+            globalUmax: document.getElementById('globalUmax').value,
+            globalTcd: document.getElementById('globalTcd').value,
+            globalInductive: document.getElementById('globalInductive').value,
+            sampleName1: document.getElementById('sampleName1').value,
+            sampleName2: document.getElementById('sampleName2').value,
+            e24_1: document.getElementById('e24_1').value,
+            eb_1: document.getElementById('eb_1').value,
+            pm_1: document.getElementById('pm_1').value,
+            psb_1: document.getElementById('psb_1').value,
+            poff_1: document.getElementById('poff_1').value,
+            e24_2: document.getElementById('e24_2').value,
+            eb_2: document.getElementById('eb_2').value,
+            pm_2: document.getElementById('pm_2').value,
+            psb_2: document.getElementById('psb_2').value,
+            poff_2: document.getElementById('poff_2').value
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
 
-        if (isNaN(N) || isNaN(Er) || isNaN(Umax) || isNaN(tcd) || isNaN(Poff) || tcd <= 5) {
-            alert("请确保所有基础参数完整，且充电测试时间 tcd > 5 小时");
+    function loadDataFromLocal() {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return false;
+        try {
+            const data = JSON.parse(raw);
+            if (data.globalN !== undefined) document.getElementById('globalN').value = data.globalN;
+            if (data.globalEr !== undefined) document.getElementById('globalEr').value = data.globalEr;
+            if (data.globalUmax !== undefined) document.getElementById('globalUmax').value = data.globalUmax;
+            if (data.globalTcd !== undefined) document.getElementById('globalTcd').value = data.globalTcd;
+            if (data.globalInductive !== undefined) document.getElementById('globalInductive').value = data.globalInductive;
+            if (data.sampleName1 !== undefined) document.getElementById('sampleName1').value = data.sampleName1;
+            if (data.sampleName2 !== undefined) document.getElementById('sampleName2').value = data.sampleName2;
+            if (data.e24_1 !== undefined) document.getElementById('e24_1').value = data.e24_1;
+            if (data.eb_1 !== undefined) document.getElementById('eb_1').value = data.eb_1;
+            if (data.pm_1 !== undefined) document.getElementById('pm_1').value = data.pm_1;
+            if (data.psb_1 !== undefined) document.getElementById('psb_1').value = data.psb_1;
+            if (data.poff_1 !== undefined) document.getElementById('poff_1').value = data.poff_1;
+            if (data.e24_2 !== undefined) document.getElementById('e24_2').value = data.e24_2;
+            if (data.eb_2 !== undefined) document.getElementById('eb_2').value = data.eb_2;
+            if (data.pm_2 !== undefined) document.getElementById('pm_2').value = data.pm_2;
+            if (data.psb_2 !== undefined) document.getElementById('psb_2').value = data.psb_2;
+            if (data.poff_2 !== undefined) document.getElementById('poff_2').value = data.poff_2;
+            return true;
+        } catch(e) { return false; }
+    }
+
+    // ---------- 历史记录管理 (仅保存 E24/Eb/Pm/Psb 四个字段共8个值) ----------
+    const HISTORY_KEY = "bat_charger_history_list";
+    // 默认示例数据（CEC标准样例）
+    const DEFAULT_HISTORY_ITEM = {
+        id: Date.now(),
+        timestamp: "示例数据 (CEC标准样例)",
+        data: {
+            e24_1: 112.49, eb_1: 76.169, pm_1: 0.401, psb_1: 0.636,
+            e24_2: 113.62, eb_2: 76.206, pm_2: 0.421, psb_2: 0.644
+        }
+    };
+
+    function getHistoryList() {
+        const raw = localStorage.getItem(HISTORY_KEY);
+        if (!raw) return [];
+        try {
+            return JSON.parse(raw);
+        } catch(e) { return []; }
+    }
+
+    function saveHistoryList(list) {
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+    }
+
+    // 初始化历史：如果没有记录则添加默认示例数据
+    function initHistory() {
+        let list = getHistoryList();
+        if (list.length === 0) {
+            list = [DEFAULT_HISTORY_ITEM];
+            saveHistoryList(list);
+        }
+    }
+
+    // 保存当前样品数据到历史（仅E24/Eb/Pm/Psb，忽略其他字段）
+    function saveCurrentToHistory() {
+        const e24_1 = document.getElementById('e24_1').value;
+        const eb_1 = document.getElementById('eb_1').value;
+        const pm_1 = document.getElementById('pm_1').value;
+        const psb_1 = document.getElementById('psb_1').value;
+        const e24_2 = document.getElementById('e24_2').value;
+        const eb_2 = document.getElementById('eb_2').value;
+        const pm_2 = document.getElementById('pm_2').value;
+        const psb_2 = document.getElementById('psb_2').value;
+        // 如果所有字段都为空，则提示并取消保存
+        if (!e24_1 && !eb_1 && !pm_1 && !psb_1 && !e24_2 && !eb_2 && !pm_2 && !psb_2) {
+            alert("没有有效数据可保存至历史记录，请先填写样品数据。");
             return;
         }
+        const now = new Date();
+        const timestamp = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()} ${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
+        const newItem = {
+            id: Date.now(),
+            timestamp: timestamp,
+            data: {
+                e24_1: e24_1 === '' ? '' : parseFloat(e24_1),
+                eb_1: eb_1 === '' ? '' : parseFloat(eb_1),
+                pm_1: pm_1 === '' ? '' : parseFloat(pm_1),
+                psb_1: psb_1 === '' ? '' : parseFloat(psb_1),
+                e24_2: e24_2 === '' ? '' : parseFloat(e24_2),
+                eb_2: eb_2 === '' ? '' : parseFloat(eb_2),
+                pm_2: pm_2 === '' ? '' : parseFloat(pm_2),
+                psb_2: psb_2 === '' ? '' : parseFloat(psb_2)
+            }
+        };
+        let list = getHistoryList();
+        list.unshift(newItem); // 最新在最前
+        saveHistoryList(list);
+        alert("当前样品数据已保存至历史记录。");
+    }
 
-        const productClass = determineProductClass(Er, Umax, isInductive);
-        if (!productClass) { alert("无法判定产品类别，请检查额定能量和电压"); return; }
-        const doeParams = getDOEParams(productClass, Er);
-        const { n, tam, tsb, toff } = doeParams;
-        const className = {1:"低能耗(感应)",2:"低能耗低电压",3:"低能耗中电压",4:"低能耗高电压",5:"中能耗低电压",6:"中能耗高电压",7:"高能耗"}[productClass];
-        document.getElementById('classNameSpan').innerHTML = `类别 ${productClass} - ${className} (n=${n}, ta&m=${tam}h)`;
+    // 加载历史数据到输入框
+    function loadHistoryItem(item) {
+        const d = item.data;
+        document.getElementById('e24_1').value = d.e24_1 !== '' ? d.e24_1 : '';
+        document.getElementById('eb_1').value = d.eb_1 !== '' ? d.eb_1 : '';
+        document.getElementById('pm_1').value = d.pm_1 !== '' ? d.pm_1 : '';
+        document.getElementById('psb_1').value = d.psb_1 !== '' ? d.psb_1 : '';
+        document.getElementById('e24_2').value = d.e24_2 !== '' ? d.e24_2 : '';
+        document.getElementById('eb_2').value = d.eb_2 !== '' ? d.eb_2 : '';
+        document.getElementById('pm_2').value = d.pm_2 !== '' ? d.pm_2 : '';
+        document.getElementById('psb_2').value = d.psb_2 !== '' ? d.psb_2 : '';
+        // 保存当前数据到本地存储并重新计算
+        saveAllDataToLocal();
+        runAnalysis();
+        closeModal();
+    }
+
+    function deleteHistoryItem(index, itemId) {
+        if (confirm(`确定要删除 "${itemId.timestamp}" 这条历史记录吗？`)) {
+            let list = getHistoryList();
+            list = list.filter((_, idx) => idx !== index);
+            saveHistoryList(list);
+            renderHistoryList(); // 重新渲染模态框
+            if (list.length === 0) {
+                // 如果删除后没有历史，可选重新添加示例数据（但用户可能想保留空列表，不强制添加）
+                // 为了避免完全空白，可以添加一个提示，但不自动加示例数据，让用户可自己保存新数据。
+                renderHistoryList(); // 会显示空状态
+            }
+        }
+    }
+
+    // 渲染历史列表
+    function renderHistoryList() {
+        const container = document.getElementById('historyList');
+        const list = getHistoryList();
+        if (!list.length) {
+            container.innerHTML = '<div class="empty-history">暂无历史数据，请先填写样品数据并点击“计算 & 保存”添加记录。</div>';
+            return;
+        }
+        let html = '';
+        list.forEach((item, idx) => {
+            const timeStr = item.timestamp;
+            html += `
+                <div class="history-item">
+                    <div class="history-info">📅 ${timeStr}</div>
+                    <div class="history-buttons">
+                        <button class="outline" data-load-idx="${idx}">加载</button>
+                        <button class="danger" data-del-idx="${idx}">删除</button>
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+        // 绑定事件
+        container.querySelectorAll('[data-load-idx]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const idx = parseInt(btn.getAttribute('data-load-idx'));
+                const list = getHistoryList();
+                if (list[idx]) loadHistoryItem(list[idx]);
+            });
+        });
+        container.querySelectorAll('[data-del-idx]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const idx = parseInt(btn.getAttribute('data-del-idx'));
+                const list = getHistoryList();
+                if (list[idx]) deleteHistoryItem(idx, list[idx]);
+            });
+        });
+    }
+
+    function openModal() {
+        renderHistoryList();
+        document.getElementById('historyModal').classList.add('active');
+    }
+    function closeModal() {
+        document.getElementById('historyModal').classList.remove('active');
+    }
+
+    // ---------- 主计算与渲染 ----------
+    function runAnalysis() {
+        let N = parseFloat(document.getElementById('globalN').value);
+        let Er = parseFloat(document.getElementById('globalEr').value);
+        let Umax = parseFloat(document.getElementById('globalUmax').value);
+        let tcd = parseFloat(document.getElementById('globalTcd').value);
+        let inductive = document.getElementById('globalInductive').value === 'true';
+        if (isNaN(N)) N = 1;
+        if (isNaN(Er)) Er = 66.24;
+        if (isNaN(Umax)) Umax = 16.6;
+        if (isNaN(tcd) || tcd < 5) tcd = 24;
+
+        const category = determineCategory(Er, Umax, inductive);
+        const consts = CATEGORY_DATA[category];
+        if (!consts) return;
+        const nDaily = consts.n;
+        const tamVal = consts.tam;
+        const formulaMode = isFormulaOne(tcd, nDaily, tamVal) ? "公式一 (含 Pm 补偿)" : "公式二 (延长空载修正)";
+        document.getElementById('catDisplay').innerHTML = `类别: ${category} 类`;
+        document.getElementById('formulaDisplay').innerHTML = `适用: ${formulaMode}`;
+
+        let name1 = document.getElementById('sampleName1').value.trim() || "1#";
+        let name2 = document.getElementById('sampleName2').value.trim() || "2#";
+        document.getElementById('thName1').innerText = name1;
+        document.getElementById('thName2').innerText = name2;
 
         const s1 = {
-            E24: parseFloat(document.getElementById('e24_1').value),
-            Eb: parseFloat(document.getElementById('eb_1').value),
-            Pm: parseFloat(document.getElementById('pm_1').value),
-            Psb: parseFloat(document.getElementById('psb_1').value)
+            E24: parseFloat(document.getElementById('e24_1').value) || 0,
+            Eb: parseFloat(document.getElementById('eb_1').value) || 0,
+            Pm: parseFloat(document.getElementById('pm_1').value) || 0,
+            Psb: parseFloat(document.getElementById('psb_1').value) || 0,
+            Poff: parseFloat(document.getElementById('poff_1').value) || 0
         };
         const s2 = {
-            E24: parseFloat(document.getElementById('e24_2').value),
-            Eb: parseFloat(document.getElementById('eb_2').value),
-            Pm: parseFloat(document.getElementById('pm_2').value),
-            Psb: parseFloat(document.getElementById('psb_2').value)
+            E24: parseFloat(document.getElementById('e24_2').value) || 0,
+            Eb: parseFloat(document.getElementById('eb_2').value) || 0,
+            Pm: parseFloat(document.getElementById('pm_2').value) || 0,
+            Psb: parseFloat(document.getElementById('psb_2').value) || 0,
+            Poff: parseFloat(document.getElementById('poff_2').value) || 0
         };
-        if ([s1, s2].some(s => Object.values(s).some(v => isNaN(v)))) {
-            alert("请完整填写两组样品的 E24, Eb, Pm, Psb");
-            return;
-        }
 
-        const cec1 = evaluateCECSample(s1.Eb, s1.E24, s1.Pm, s1.Psb, N);
-        const cec2 = evaluateCECSample(s2.Eb, s2.E24, s2.Pm, s2.Psb, N);
-        const cecOverallOK = cec1.isOk && cec2.isOk;
-
-        let uec1, uec2, formulaUsed, formulaExpression;
-        try {
-            const r1 = computeUEC(s1.E24, s1.Eb, s1.Pm, s1.Psb, Poff, n, tam, tsb, toff, tcd);
-            const r2 = computeUEC(s2.E24, s2.Eb, s2.Pm, s2.Psb, Poff, n, tam, tsb, toff, tcd);
-            uec1 = r1.uec; uec2 = r2.uec;
-            formulaUsed = r1.formula;
-            formulaExpression = r1.formulaExpression;
-        } catch(e) { alert(e.message); return; }
-
-        const meanUec = (uec1 + uec2) / 2;
-        const stdDev = Math.sqrt((uec1-meanUec)**2 + (uec2-meanUec)**2);
-        const tFactor = 12.706;
-        const ucl = meanUec + tFactor * (stdDev / Math.sqrt(2));
-
+        let uec1 = computeUEC_kWh(s1, category, tcd, consts);
+        let uec2 = computeUEC_kWh(s2, category, tcd, consts);
+        uec1 = parseFloat(uec1.toFixed(6));
+        uec2 = parseFloat(uec2.toFixed(6));
+        const uecMean = (uec1 + uec2) / 2;
+        const sd = Math.abs(uec1 - uec2) / Math.sqrt(2);
+        const ucl = uecMean + 12.706 * (sd / Math.sqrt(2));
+        const uclDiv105 = ucl / 1.05;
+        const declareValue = Math.max(uec1, uec2, uclDiv105);
         const avgEb = (s1.Eb + s2.Eb) / 2;
-        const federalLimit = getDOELimitByEb(productClass, avgEb);
-        const maxSampleUEC = Math.max(uec1, uec2);
-        const declaredValue = Math.max(maxSampleUEC, ucl / 1.05);
-        const doePass = declaredValue <= federalLimit;
-        const finalCompliance = cecOverallOK && doePass;
+        const maxAllow = getMaxAllowance(category, avgEb);
+        const finalPass = declareValue <= maxAllow;
+        const verdictHtml = finalPass ? '<span class="pass-badge">PASS ✅</span>' : '<span class="fail-badge">FAIL ❌</span>';
 
-        // 构建结果HTML
-        let cecHtml = `<div style="background:#f4f9fe; border-radius:18px; padding:12px 16px;"><h3>📌 CEC 合规判定</h3>`;
-        cecHtml += `<div>样品1: ${cec1.isOk ? '✅ OK' : '❌ NG'}  (E24:${cec1.e24Value.toFixed(2)} ≤ ${cec1.e24Limit.toFixed(2)} Wh, 功率和:${cec1.powerSumValue.toFixed(3)} ≤ ${cec1.powerSumLimit.toFixed(3)} W)</div>`;
-        cecHtml += `<div>样品2: ${cec2.isOk ? '✅ OK' : '❌ NG'}  (E24:${cec2.e24Value.toFixed(2)} ≤ ${cec2.e24Limit.toFixed(2)} Wh, 功率和:${cec2.powerSumValue.toFixed(3)} ≤ ${cec2.powerSumLimit.toFixed(3)} W)</div>`;
-        cecHtml += `<hr><span>CEC 综合: ${cecOverallOK ? '<span class="verdict-pass">符合</span>' : '<span class="verdict-fail">不符合</span>'}</span></div>`;
+        document.getElementById('res_e24_1').innerText = s1.E24.toFixed(2);
+        document.getElementById('res_e24_2').innerText = s2.E24.toFixed(2);
+        document.getElementById('res_eb_1').innerText = s1.Eb.toFixed(3);
+        document.getElementById('res_eb_2').innerText = s2.Eb.toFixed(3);
+        document.getElementById('avg_eb').innerText = avgEb.toFixed(3);
+        document.getElementById('res_pm_1').innerText = s1.Pm.toFixed(3);
+        document.getElementById('res_pm_2').innerText = s2.Pm.toFixed(3);
+        document.getElementById('res_psb_1').innerText = s1.Psb.toFixed(3);
+        document.getElementById('res_psb_2').innerText = s2.Psb.toFixed(3);
+        document.getElementById('uec1_val').innerHTML = uec1.toFixed(3);
+        document.getElementById('uec2_val').innerHTML = uec2.toFixed(3);
+        document.getElementById('uec_mean').innerHTML = uecMean.toFixed(3);
+        document.getElementById('uec_sd').innerHTML = sd.toFixed(4);
+        document.getElementById('uec_ucl').innerHTML = ucl.toFixed(3);
+        document.getElementById('declared_val').innerHTML = `<strong>${declareValue.toFixed(3)}</strong>`;
+        document.getElementById('limit_val').innerHTML = maxAllow.toFixed(3);
+        document.getElementById('final_verdict_cell').innerHTML = verdictHtml;
 
-        let doeHtml = `<div style="background:#f4f9fe; border-radius:18px; padding:12px 16px; margin-top:12px;"><h3>📘 DOE 能耗判定</h3>`;
-        doeHtml += `<div class="formula-box"><strong>🔢 当前使用的UEC公式 (公式${formulaUsed})：</strong><br>${formulaExpression}</div>`;
-        doeHtml += `<div>🔹 样品1 UEC = ${uec1.toFixed(5)} kWh/yr</div>`;
-        doeHtml += `<div>🔸 样品2 UEC = ${uec2.toFixed(5)} kWh/yr</div>`;
-        doeHtml += `<div>📊 统计值: 均值=${meanUec.toFixed(5)}, UCL=${ucl.toFixed(5)} (t=12.706)</div>`;
-        doeHtml += `<div>📐 两样品 Eb 平均值 = ${avgEb.toFixed(3)} Wh</div>`;
-        doeHtml += `<div>📏 联邦标准限值 = ${federalLimit.toFixed(5)} kWh/yr</div>`;
-        doeHtml += `<div>📌 声明值 = max(样品最大UEC, UCL/1.05) = ${declaredValue.toFixed(5)} kWh/yr</div>`;
-        doeHtml += `<div>✅ DOE判定: ${doePass ? '<span class="verdict-pass">PASS (声明值 ≤ 限值)</span>' : '<span class="verdict-fail">FAIL (声明值 > 限值)</span>'}</div></div>`;
+        const isTcd24 = Math.abs(tcd - 24) < 0.01;
+        let cec1Msg = "N/A (tcd≠24)";
+        let cec2Msg = "N/A (tcd≠24)";
+        if (isTcd24) {
+            const pass1 = checkSingleCEC(N, s1.E24, s1.Eb, s1.Pm, s1.Psb);
+            const pass2 = checkSingleCEC(N, s2.E24, s2.Eb, s2.Pm, s2.Psb);
+            cec1Msg = pass1 ? "合格 ✔️" : "不合格 ❌";
+            cec2Msg = pass2 ? "合格 ✔️" : "不合格 ❌";
+        }
+        document.getElementById('cec_pass1').innerHTML = cec1Msg;
+        document.getElementById('cec_pass2').innerHTML = cec2Msg;
+        document.getElementById('cecHint1').innerHTML = isTcd24 ? (cec1Msg.includes("合格") ? "✅ CEC通过" : "❌ CEC不通过") : "⏳ 仅tcd=24h可判定";
+        document.getElementById('cecHint2').innerHTML = isTcd24 ? (cec2Msg.includes("合格") ? "✅ CEC通过" : "❌ CEC不通过") : "⏳ 仅tcd=24h可判定";
 
-        let finalHtml = `<div style="background:#eef3fc; border-radius:20px; padding:15px;"><h3>🎯 最终综合结论</h3>
-        <div style="font-size:1.2rem;">${finalCompliance ? '<span class="verdict-pass">✅ 合规 PASS</span>' : '<span class="verdict-fail">❌ 不合规 FAIL</span>'}</div>
-        <div class="info-text">自动类别: ${className} (类别${productClass}) | 联邦限值基于两样品 Eb 平均值 (${avgEb.toFixed(2)} Wh)。</div></div>`;
-
-        document.getElementById('resultSummary').innerHTML = finalHtml;
-        document.getElementById('cecDetails').innerHTML = cecHtml;
-        document.getElementById('doeDetails').innerHTML = doeHtml;
-
-        let processText = `═══════════════════════════════════════════════════
-  CEC/DOE 计算详细过程
-═══════════════════════════════════════════════════
-【基础参数】
-额定能量 Er = ${Er} Wh, 满电电压 Umax = ${Umax} V, 感应连接:${isInductive?'是':'否'}
-→ 自动类别: ${productClass} - ${className}
-端口数 N=${N}, tcd=${tcd}h, Poff=${Poff}W
-DOE参数: n=${n}, ta&m=${tam}h, tsb=${tsb}h, toff=${toff}h
-
-【UEC 公式选择】
-条件 (tcd-5)*n = ${((tcd-5)*n).toFixed(4)} ≤ ta&m(${tam})? ${((tcd-5)*n <= tam) ? '是 → 使用公式Ⅰ' : '否 → 使用公式Ⅱ'}
-当前采用公式${formulaUsed}：
-${formulaExpression}
-
-【CEC 限值 (基于每个样品实测Eb)】
-样品1 Eb=${s1.Eb} → E24限值=${cec1.e24Limit.toFixed(2)}, 功率和限值=${cec1.powerSumLimit.toFixed(4)}
-样品2 Eb=${s2.Eb} → E24限值=${cec2.e24Limit.toFixed(2)}, 功率和限值=${cec2.powerSumLimit.toFixed(4)}
-
-【UEC 计算详情】
-样品1: 能量项 = ${(s1.E24-5*s1.Pm-s1.Eb).toFixed(4)} → UEC1 = ${uec1.toFixed(6)} kWh/yr
-样品2: 能量项 = ${(s2.E24-5*s2.Pm-s2.Eb).toFixed(4)} → UEC2 = ${uec2.toFixed(6)} kWh/yr
-
-【统计量计算】
-UEC均值 = ${meanUec.toFixed(5)} kWh/yr, 标准差 = ${stdDev.toFixed(6)}
-UCL = ${ucl.toFixed(5)} kWh/yr
-
-【DOE 联邦限值 (基于两样品Eb平均值)】
-平均值 Eb_avg = ${avgEb.toFixed(4)} Wh → 联邦标准限值 = ${federalLimit.toFixed(5)} kWh/yr
-声明值 = ${declaredValue.toFixed(5)} kWh/yr → ${doePass ? 'PASS' : 'FAIL'}
-
-最终: CEC ${cecOverallOK ? 'PASS' : 'FAIL'} , DOE ${doePass ? 'PASS' : 'FAIL'} → 综合 ${finalCompliance ? '合规' : '不合规'}
-生成时间: ${new Date().toLocaleString()}`;
-
-        document.getElementById('calcProcess').innerText = processText;
-        window.lastReportText = processText;
-
-        document.getElementById('resultContainer').style.display = 'block';
-        document.getElementById('toggleProcessBtn').disabled = false;
-        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        buildDetailedReport(category, consts, tcd, s1, s2, uec1, uec2, uecMean, sd, ucl, uclDiv105, declareValue, avgEb, maxAllow, finalPass, N, isTcd24, name1, name2);
+        
+        saveAllDataToLocal(); // 每次计算自动保存当前界面状态
     }
 
-    // ========== 截图功能：包含基础参数、样品数据、结果报告，排除所有按钮 ==========
-    async function copyScreenshot() {
-        // 确保结果区域可见
-        if (document.getElementById('resultContainer').style.display !== 'block') {
-            alert("请先完成计算，显示结果后再截图");
-            return;
+    function buildDetailedReport(cat, consts, tcd, s1, s2, uec1, uec2, mean, sd, ucl, uclDiv105, decl, avgEb, limit, pass, N, isTcd24, name1, name2) {
+        const { n, tam, tsb, toff } = consts;
+        const useFormulaOne = isFormulaOne(tcd, n, tam);
+        const formulaStr = useFormulaOne ? "公式一 (带休眠补偿)" : "公式二 (修正分母)";
+        const details = [];
+        details.push(`▸ 电池类别: ${cat}类 | 每日充电次数 n = ${n} | ta&m = ${tam} h | tsb = ${tsb} h | toff = ${toff} h`);
+        details.push(`▸ 适用公式: ${formulaStr} (判定条件: (tcd-5)*n ${useFormulaOne ? '≤' : '>'} ta&m → ${((tcd-5)*n).toFixed(3)} vs ${tam})`);
+        
+        const base1 = s1.E24 - 5*s1.Pm - s1.Eb;
+        const part1_1 = n * base1 * 24 / tcd;
+        let part2_1 = 0;
+        if (useFormulaOne) {
+            const delta = tam - (tcd-5)*n;
+            part2_1 = s1.Pm * (delta > 0 ? delta : 0);
         }
+        const static1 = s1.Psb * tsb + s1.Poff * toff;
+        const dailyTerm1 = (useFormulaOne ? (part1_1 + part2_1) : (n * base1 * 24 / (tcd-5))) + static1;
+        const uecWh1 = dailyTerm1 * 365;
+        details.push(`\n🔸 ${name1} 能耗推导:`);
+        details.push(`   E24-5·Pm-Eb = ${s1.E24.toFixed(3)} - ${(5*s1.Pm).toFixed(3)} - ${s1.Eb.toFixed(3)} = ${base1.toFixed(4)} Wh`);
+        if (useFormulaOne) {
+            details.push(`   ● 主项 = n · (base) · 24/tcd = ${n} × ${base1.toFixed(4)} × 24/${tcd} = ${part1_1.toFixed(4)}`);
+            const deltaVal = tam - (tcd-5)*n;
+            details.push(`   ● 补偿项 Pm × [ta&m - (tcd-5)n] = ${s1.Pm} × ${deltaVal.toFixed(4)} = ${part2_1.toFixed(4)}`);
+        } else {
+            const denom = tcd-5;
+            details.push(`   ● 主项 = n · (base) · 24/(tcd-5) = ${n} × ${base1.toFixed(4)} × 24/${denom} = ${(n * base1 * 24 / denom).toFixed(4)}`);
+        }
+        details.push(`   ● 静态部分 Psb·tsb + Poff·toff = ${s1.Psb}×${tsb} + ${s1.Poff}×${toff} = ${static1.toFixed(4)}`);
+        details.push(`   单日能耗 = ${dailyTerm1.toFixed(4)} Wh/天 → 年能耗 = ${uecWh1.toFixed(2)} Wh = ${uec1.toFixed(4)} kWh/yr`);
+        
+        const base2 = s2.E24 - 5*s2.Pm - s2.Eb;
+        const part1_2 = n * base2 * 24 / tcd;
+        let part2_2 = 0;
+        if (useFormulaOne) {
+            const delta = tam - (tcd-5)*n;
+            part2_2 = s2.Pm * (delta > 0 ? delta : 0);
+        }
+        const static2 = s2.Psb * tsb + s2.Poff * toff;
+        const dailyTerm2 = (useFormulaOne ? (part1_2 + part2_2) : (n * base2 * 24 / (tcd-5))) + static2;
+        const uecWh2 = dailyTerm2 * 365;
+        details.push(`\n🔸 ${name2} 能耗推导:`);
+        details.push(`   E24-5Pm-Eb = ${s2.E24.toFixed(3)} - ${(5*s2.Pm).toFixed(3)} - ${s2.Eb.toFixed(3)} = ${base2.toFixed(4)} Wh`);
+        if (useFormulaOne) {
+            details.push(`   主项 = ${n}×${base2.toFixed(4)}×24/${tcd} = ${part1_2.toFixed(4)} , 补偿项 = ${s2.Pm}×${(tam - (tcd-5)*n).toFixed(4)} = ${part2_2.toFixed(4)}`);
+        } else {
+            details.push(`   主项(公式二) = ${n}×${base2.toFixed(4)}×24/${tcd-5} = ${(n * base2 * 24 / (tcd-5)).toFixed(4)}`);
+        }
+        details.push(`   静态 = ${static2.toFixed(4)}  → 年能耗 = ${uecWh2.toFixed(2)} Wh = ${uec2.toFixed(4)} kWh/yr`);
+        
+        details.push(`\n📊 统计量:`);
+        details.push(`   均值 UECm = (${uec1.toFixed(4)} + ${uec2.toFixed(4)})/2 = ${mean.toFixed(4)} kWh/yr`);
+        details.push(`   标准偏差 SD = √[ (${(uec1-mean).toFixed(5)}² + ${(uec2-mean).toFixed(5)}²) / 2 ] = ${sd.toFixed(5)}`);
+        details.push(`   UCL = UECm + 12.706 × (SD/√2) = ${mean.toFixed(4)} + 12.706 × ${(sd/Math.sqrt(2)).toFixed(5)} = ${ucl.toFixed(4)}`);
+        details.push(`   UCL/1.05 = ${(ucl/1.05).toFixed(4)}`);
+        details.push(`   申报值 = max(UEC₁, UEC₂, UCL/1.05) = ${decl.toFixed(4)} kWh/yr`);
+        details.push(`\n🎯 联邦标准 (基于平均Eb = ${avgEb.toFixed(3)} Wh):`);
+        let stdRule = "";
+        switch(cat) {
+            case 1: stdRule = "固定 3.04"; break;
+            case 2: stdRule = `0.144×Eb+2.95`; break;
+            case 3: stdRule = avgEb<10 ? "固定1.42" : "0.0255×Eb+1.16"; break;
+            case 4: stdRule = "0.11×Eb+3.18"; break;
+            case 5: stdRule = "0.0257×Eb+0.815"; break;
+            case 6: stdRule = "0.0778×Eb+2.4"; break;
+            case 7: stdRule = "0.0502×Eb+4.53"; break;
+        }
+        details.push(`   类别${cat} 规则: ${stdRule} → 限值 = ${limit.toFixed(4)} kWh/yr`);
+        details.push(`\n⚖️ 最终判定: ${decl.toFixed(3)} ≤ ${limit.toFixed(3)} ? ${pass ? "PASS (符合标准)" : "FAIL (超标)"}`);
+        if (isTcd24) {
+            const cec1 = checkSingleCEC(N, s1.E24, s1.Eb, s1.Pm, s1.Psb);
+            const cec2 = checkSingleCEC(N, s2.E24, s2.Eb, s2.Pm, s2.Psb);
+            details.push(`\n📋 CEC 合格性 (tcd=24h): ${name1} ${cec1 ? "通过" : "不通过"}  | ${name2} ${cec2 ? "通过" : "不通过"}`);
+        } else {
+            details.push(`\n⚠️ 当前 tcd = ${tcd}h ≠ 24h，CEC 单项判定不适用。`);
+        }
+        document.getElementById('detailContent').innerHTML = details.join('<br>');
+    }
 
-        // 克隆需要截图的三个主要卡片
-        const baseCard = document.getElementById('baseParamsCard');
-        const sampleCard = document.getElementById('sampleDataCard');
-        const resultCard = document.getElementById('resultCard');
-
-        // 创建克隆容器
-        const cloneContainer = document.createElement('div');
-        cloneContainer.className = 'screenshot-clone';
-        // 设置背景色与原始页面一致
-        cloneContainer.style.backgroundColor = '#eef2f5';
-        cloneContainer.style.padding = '20px';
-        cloneContainer.style.width = '1100px'; // 固定宽度保证布局一致
-
-        // 深拷贝三个卡片
-        const baseClone = baseCard.cloneNode(true);
-        const sampleClone = sampleCard.cloneNode(true);
-        const resultClone = resultCard.cloneNode(true);
-
-        // 移除所有按钮组（.btn-group）
-        const removeBtnGroups = (element) => {
-            const btns = element.querySelectorAll('.btn-group');
-            btns.forEach(btn => btn.remove());
-        };
-        removeBtnGroups(baseClone);
-        removeBtnGroups(sampleClone);
-        removeBtnGroups(resultClone);
-
-        // 可选：移除“显示/隐藏详细过程”按钮可能存在的独立按钮（但已包含在btn-group中）
-        // 额外移除可能残留的单个按钮（如果有）
-        const allBtns = [...baseClone.querySelectorAll('.btn'), ...sampleClone.querySelectorAll('.btn'), ...resultClone.querySelectorAll('.btn')];
-        allBtns.forEach(btn => btn.remove());
-
-        // 将克隆后的卡片添加到容器
-        cloneContainer.appendChild(baseClone);
-        cloneContainer.appendChild(sampleClone);
-        cloneContainer.appendChild(resultClone);
-
-        document.body.appendChild(cloneContainer);
-
-        try {
-            const canvas = await html2canvas(cloneContainer, {
-                scale: 2,
-                backgroundColor: '#eef2f5',
-                logging: false,
-                useCORS: false
-            });
-            canvas.toBlob(async (blob) => {
-                try {
-                    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-                    alert("✅ 截图已复制到剪贴板（包含基础参数、样品数据、报告结论）");
-                } catch (err) {
-                    alert("剪贴板写入失败: " + err.message);
-                } finally {
-                    // 清理克隆元素
-                    document.body.removeChild(cloneContainer);
-                }
-            });
-        } catch (e) {
-            alert("截图生成失败: " + e.message);
-            document.body.removeChild(cloneContainer);
+    function clearSampleData() {
+        if (confirm("⚠️ 确定要清空两个样品的 E24、Eb、Pm、Psb 数据吗？(Poff和全局参数不受影响)")) {
+            document.getElementById('e24_1').value = '';
+            document.getElementById('eb_1').value = '';
+            document.getElementById('pm_1').value = '';
+            document.getElementById('psb_1').value = '';
+            document.getElementById('e24_2').value = '';
+            document.getElementById('eb_2').value = '';
+            document.getElementById('pm_2').value = '';
+            document.getElementById('psb_2').value = '';
+            saveAllDataToLocal();
+            runAnalysis();
         }
     }
 
-    function saveResult() {
-        if (!window.lastReportText) { alert("请先计算"); return; }
-        const blob = new Blob([window.lastReportText], {type: 'text/plain'});
-        const a = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        a.href = url;
-        a.download = `CEC_DOE_Result_${new Date().toISOString().slice(0,19)}.txt`;
-        a.click();
-        URL.revokeObjectURL(url);
-    }
+    // ---------- 事件绑定 ----------
+    document.getElementById('calcBtn').addEventListener('click', () => {
+        runAnalysis();
+        saveCurrentToHistory();   // 额外保存到历史记录
+    });
+    document.getElementById('clearDataBtn').addEventListener('click', clearSampleData);
+    document.getElementById('historyBtn').addEventListener('click', openModal);
+    document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+    document.getElementById('historyModal').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('historyModal')) closeModal();
+    });
+    const detailPanel = document.getElementById('detailPanel');
+    let detailVisible = false;
+    document.getElementById('toggleDetailBtn').addEventListener('click', () => {
+        detailVisible = !detailVisible;
+        detailPanel.style.display = detailVisible ? 'block' : 'none';
+    });
+    const allInputs = document.querySelectorAll('input, select');
+    allInputs.forEach(inp => inp.addEventListener('change', runAnalysis));
 
-    function toggleProcess() {
-        const div = document.getElementById('calcProcess');
-        div.style.display = div.style.display === 'none' ? 'block' : 'none';
-    }
-
-    function updateAutoClassDisplay() {
-        const Er = parseFloat(document.getElementById('ratedEnergy').value);
-        const Umax = parseFloat(document.getElementById('maxVoltage').value);
-        const isInductive = document.getElementById('inductiveConnect').value === 'yes';
-        if (!isNaN(Er) && !isNaN(Umax)) {
-            const cls = determineProductClass(Er, Umax, isInductive);
-            if (cls) {
-                const name = {1:"低能耗(感应)",2:"低能耗低电压",3:"低能耗中电压",4:"低能耗高电压",5:"中能耗低电压",6:"中能耗高电压",7:"高能耗"}[cls];
-                document.getElementById('classNameSpan').innerHTML = `类别 ${cls} - ${name}`;
-            } else document.getElementById('classNameSpan').innerHTML = `无法判定`;
+    // 初始化：加载本地数据，若无则保持空白样品区（只有全局参数有默认值），并初始化历史记录
+    window.addEventListener('DOMContentLoaded', () => {
+        initHistory();   // 确保历史列表至少有一条示例数据
+        const hasStored = loadDataFromLocal();
+        if (!hasStored) {
+            // 无存储时样品数据保持空白（placeholder）
+            document.getElementById('e24_1').value = '';
+            document.getElementById('eb_1').value = '';
+            document.getElementById('pm_1').value = '';
+            document.getElementById('psb_1').value = '';
+            document.getElementById('e24_2').value = '';
+            document.getElementById('eb_2').value = '';
+            document.getElementById('pm_2').value = '';
+            document.getElementById('psb_2').value = '';
         }
-    }
-
-    document.getElementById('ratedEnergy').addEventListener('input', updateAutoClassDisplay);
-    document.getElementById('maxVoltage').addEventListener('input', updateAutoClassDisplay);
-    document.getElementById('inductiveConnect').addEventListener('change', updateAutoClassDisplay);
-    window.addEventListener('load', updateAutoClassDisplay);
-    document.getElementById('calcBtn').addEventListener('click', calculate);
-    document.getElementById('toggleProcessBtn').addEventListener('click', toggleProcess);
-    document.getElementById('copyScreenshotBtn').addEventListener('click', copyScreenshot);
-    document.getElementById('saveResultBtn').addEventListener('click', saveResult);
-    document.getElementById('resultContainer').style.display = 'none';
+        runAnalysis();   // 初始计算
+    });
 </script>
 </body>
 </html>
